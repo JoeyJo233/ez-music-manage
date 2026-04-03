@@ -60,6 +60,6 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name="EZ Music Manage.app",
-    icon=None,
+    icon="assets/icon/emm_app_icon.icns",
     bundle_identifier="com.joeyjo.ezmusicmanage",
 )

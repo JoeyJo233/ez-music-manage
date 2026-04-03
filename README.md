@@ -132,6 +132,14 @@ To build the `.dmg` package:
 bash scripts/build_dmg.sh
 ```
 
+To rebuild the app icon from the `EMM` SVG source:
+
+```bash
+bash scripts/build_icon.sh
+```
+
+If `assets/icon/source/app_icon_1024.png` exists, the script uses that custom 1024x1024 PNG first.
+
 ---
 
 ## 中文文档
@@ -263,3 +271,11 @@ uv run --with pyinstaller pyinstaller ez_music_manage.spec
 ```bash
 bash scripts/build_dmg.sh
 ```
+
+如果要重新生成应用图标（基于仓库里的 `EMM` SVG 图标源文件），执行：
+
+```bash
+bash scripts/build_icon.sh
+```
+
+如果存在 `assets/icon/source/app_icon_1024.png`，脚本会优先使用这张你自己的 1024x1024 PNG。

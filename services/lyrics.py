@@ -7,6 +7,8 @@ from typing import Optional
 
 import httpx
 
+MAX_LYRIC_SEARCH_RESULTS = 3
+
 
 async def search_lrclib(artist: str, title: str, album: str = "") -> list[dict]:
     try:
@@ -18,7 +20,7 @@ async def search_lrclib(artist: str, title: str, album: str = "") -> list[dict]:
             resp.raise_for_status()
             data = resp.json()
         results = []
-        for item in data[:5]:
+        for item in data[:MAX_LYRIC_SEARCH_RESULTS]:
             synced = item.get("syncedLyrics") or ""
             plain = item.get("plainLyrics") or ""
             if not synced and not plain:
@@ -61,10 +63,10 @@ def _search_netease_sync(artist: str, title: str, cookie: str) -> list[dict]:
         keyword = f"{artist} {title}".strip()
         if not keyword:
             return []
-        search_resp = GetSearchResult(keyword, search_type=1, limit=5)
+        search_resp = GetSearchResult(keyword, search_type=1, limit=MAX_LYRIC_SEARCH_RESULTS)
         songs = search_resp.get("result", {}).get("songs", [])
         results = []
-        for song in songs[:5]:
+        for song in songs[:MAX_LYRIC_SEARCH_RESULTS]:
             song_id = song.get("id")
             if not song_id:
                 continue
@@ -101,4 +103,4 @@ async def search_lyrics(artist: str, title: str, album: str = "", cookie: str = 
     lrclib_results, netease_results = await asyncio.gather(lrclib_task, netease_task)
     all_results = lrclib_results + netease_results
     all_results.sort(key=lambda x: (not x["has_synced"], not x.get("has_translated", False)))
-    return all_results
+    return all_results[:MAX_LYRIC_SEARCH_RESULTS]

@@ -23,6 +23,8 @@ DEFAULT_SETTINGS = {
         "lrc_badge": True,
     },
     "itunes_countries": ["JP", "US"],
+    "ui_language": "zh-CN",
+    "theme_mode": "auto",
 }
 
 

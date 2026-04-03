@@ -15,6 +15,16 @@ from services.scanner import library
 router = APIRouter(prefix="/api/batch", tags=["batch"])
 
 
+def _normalize(value: str) -> str:
+    return (value or "").strip().lower()
+
+
+def _album_group_key(song) -> tuple[str, str]:
+    album = _normalize(song.album)
+    owner = _normalize(song.album_artist) or _normalize(song.artist)
+    return album, owner
+
+
 class BatchCoverRequest(BaseModel):
     song_ids: list[str]
     overwrite: bool = False
@@ -130,17 +140,26 @@ async def batch_sync_album_covers(req: BatchSyncAlbumCoversRequest):
 
     songs = [library.get_song(sid) for sid in req.song_ids if library.get_song(sid)]
 
-    albums: dict[str, list] = {}
+    albums: dict[tuple[str, str], dict] = {}
     for s in songs:
-        key = s.album.strip().lower()
-        if key:
-            albums.setdefault(key, []).append(s)
+        album, owner = _album_group_key(s)
+        if album:
+            key = (album, owner)
+            if key not in albums:
+                label = s.album.strip()
+                if s.album_artist.strip():
+                    label = f"{label} / {s.album_artist.strip()}"
+                elif s.artist.strip():
+                    label = f"{label} / {s.artist.strip()}"
+                albums[key] = {"songs": [], "label": label}
+            albums[key]["songs"].append(s)
 
     albums_processed = 0
     songs_updated = 0
     albums_skipped = []
 
-    for album_key, album_songs in albums.items():
+    for album_data in albums.values():
+        album_songs = album_data["songs"]
         source = None
         source_cover = None
         for s in album_songs:
@@ -150,7 +169,7 @@ async def batch_sync_album_covers(req: BatchSyncAlbumCoversRequest):
                 break
 
         if not source_cover:
-            albums_skipped.append(album_key)
+            albums_skipped.append(album_data["label"])
             continue
 
         albums_processed += 1

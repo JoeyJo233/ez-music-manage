@@ -8,6 +8,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+(() => {
+  const language = localStorage.getItem('uiLanguage') || 'zh-CN'
+  const themeMode = localStorage.getItem('themeMode') || 'auto'
+  const resolvedTheme = themeMode === 'auto'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : themeMode
+  document.documentElement.lang = language
+  document.documentElement.dataset.theme = resolvedTheme
+  window.__EZ_PREFS = { language, themeMode }
+})()
+</script>
 <style>
 /* ═══════════════════════════════════════════
    EZ Music Manage — Glassmorphism UI
@@ -19,6 +31,7 @@
 :root {
   /* Deep dark base */
   --bg: #07071a;
+  --bg-secondary: rgba(11, 11, 28, 0.76);
 
   /* Glass layers */
   --glass: rgba(255, 255, 255, 0.03);
@@ -51,6 +64,7 @@
 
   /* Spacing & Shape */
   --border: rgba(255, 255, 255, 0.05);
+  --overlay: rgba(0, 0, 0, 0.55);
   --radius: 10px;
   --radius-lg: 16px;
   --blur: 24px;
@@ -63,6 +77,34 @@
   --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
+html[data-theme="light"] {
+  --bg: #f5efe6;
+  --bg-secondary: rgba(255, 248, 239, 0.72);
+  --glass: rgba(255, 255, 255, 0.54);
+  --glass-hover: rgba(255, 255, 255, 0.74);
+  --glass-active: rgba(255, 255, 255, 0.9);
+  --glass-elevated: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(109, 93, 76, 0.12);
+  --glass-border-hover: rgba(109, 93, 76, 0.24);
+  --text: #241f28;
+  --text2: rgba(36, 31, 40, 0.66);
+  --text3: rgba(36, 31, 40, 0.38);
+  --accent: #c55f2b;
+  --accent-dim: rgba(197, 95, 43, 0.14);
+  --accent-glow: rgba(197, 95, 43, 0.24);
+  --accent2: #f0a46f;
+  --green-dim: rgba(74, 222, 128, 0.16);
+  --red-dim: rgba(251, 113, 133, 0.14);
+  --orange-dim: rgba(251, 191, 36, 0.14);
+  --blue: #2563eb;
+  --blue-dim: rgba(37, 99, 235, 0.14);
+  --border: rgba(109, 93, 76, 0.1);
+  --overlay: rgba(72, 54, 36, 0.2);
+  --shadow-sm: 0 12px 26px rgba(173, 125, 79, 0.08);
+  --shadow-md: 0 18px 44px rgba(173, 125, 79, 0.12);
+  --shadow-lg: 0 28px 70px rgba(173, 125, 79, 0.18);
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
   background: var(--bg);
@@ -70,6 +112,7 @@ body {
   height: 100vh;
   overflow: hidden;
   position: relative;
+  transition: background var(--transition), color var(--transition);
 }
 
 /* ── Ambient gradient orbs for depth ── */
@@ -96,6 +139,18 @@ body::after {
   bottom: -200px;
   left: -100px;
   background: radial-gradient(circle, rgba(124, 58, 237, 0.10), transparent 70%);
+}
+
+html[data-theme="light"] body::before {
+  background: radial-gradient(circle, rgba(240, 164, 111, 0.24), transparent 70%);
+}
+
+html[data-theme="light"] body::after {
+  background: radial-gradient(circle, rgba(197, 95, 43, 0.14), transparent 70%);
+}
+
+html[data-theme="light"] .detail-loading {
+  background: rgba(255, 250, 244, 0.68);
 }
 
 /* ── Base form elements ── */
@@ -192,6 +247,7 @@ button {
 .topbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 10px 20px;
   background: var(--glass);
@@ -199,8 +255,17 @@ button {
   -webkit-backdrop-filter: blur(var(--blur));
   border-bottom: 1px solid var(--glass-border);
   flex-shrink: 0;
+  position: relative;
+  z-index: 40;
 }
 .topbar input { flex: 1; }
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
 .app-brand {
   display: flex;
   align-items: center;
@@ -231,6 +296,101 @@ button {
   border: 1px solid var(--glass-border);
   font-weight: 500;
   white-space: nowrap;
+}
+.toolbar-icon-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.theme-menu {
+  position: relative;
+}
+.theme-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 112px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(var(--blur-heavy));
+  -webkit-backdrop-filter: blur(var(--blur-heavy));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+}
+.theme-menu-panel {
+  min-width: 52px;
+  background: var(--bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.theme-menu-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 38px;
+  padding: 0;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text2);
+  font-size: 18px;
+  font-weight: 600;
+}
+.theme-menu-options {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.theme-menu-option:hover {
+  background: var(--glass-active);
+  border-color: var(--glass-border-hover);
+  color: var(--text);
+}
+.theme-menu-option.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 6px 18px var(--accent-dim);
+}
+.theme-menu-check {
+  display: none;
+}
+.language-menu {
+  position: relative;
+}
+.language-menu-option {
+  width: 100%;
+  justify-content: space-between;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.language-menu-option:hover {
+  background: var(--glass-active);
+  color: var(--text);
+}
+.language-menu-option.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 6px 18px var(--accent-dim);
 }
 
 .main { display: flex; flex: 1; overflow: hidden; }
@@ -366,6 +526,23 @@ button {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: relative;
+}
+.detail-loading {
+  position: absolute;
+  inset: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(8, 8, 20, 0.28);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text2);
+  font-size: 13px;
+  z-index: 3;
 }
 .empty-state {
   display: flex;
@@ -475,6 +652,18 @@ button {
   gap: 12px;
 }
 .field { display: flex; flex-direction: column; gap: 4px; }
+.field-group {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 12px;
+}
+.field-group-compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.field-group-secondary {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  align-items: start;
+}
 .field label {
   font-size: 11px;
   color: var(--text2);
@@ -484,7 +673,11 @@ button {
 }
 .field input, .field textarea { width: 100%; }
 .field-full { grid-column: 1 / -1; }
-.field-third { }
+.field-compact input { min-width: 0; }
+.field-group-secondary textarea {
+  min-height: 72px;
+  resize: vertical;
+}
 
 /* ── LRC section ── */
 .lrc-section {
@@ -522,7 +715,7 @@ button {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--overlay);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
@@ -534,7 +727,7 @@ button {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .modal {
-  background: rgba(18, 18, 42, 0.88);
+  background: var(--bg-secondary);
   backdrop-filter: blur(var(--blur-heavy));
   -webkit-backdrop-filter: blur(var(--blur-heavy));
   border: 1px solid var(--glass-border);
@@ -753,6 +946,55 @@ button {
 
 /* ── Selection ── */
 ::selection { background: var(--accent-dim); color: var(--text); }
+
+.topbar,
+.left-panel,
+.toolbar,
+.song-card,
+.modal,
+.lyric-candidate,
+.report,
+.tree-header,
+.cover-placeholder,
+.cover-candidate,
+input,
+textarea,
+select,
+button {
+  transition:
+    background var(--transition),
+    color var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+}
+
+@media (max-width: 980px) {
+  .topbar input {
+    min-width: 100%;
+    order: 2;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .field-group-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field-group-secondary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .field-group-compact {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </head>
 <body>
@@ -768,16 +1010,65 @@ button {
       <span class="app-brand-icon">🎵</span>
       <span class="app-brand-name">EZ Music</span>
     </div>
-    <input v-model="scanPath" @keydown.enter="doScan" placeholder="输入音乐文件夹路径，如 ~/Music" style="font-size:13px;padding:8px 14px;">
-    <button class="btn-secondary" @click="browseFolder" :disabled="browsing" title="在 Finder 中选择文件夹" style="padding:8px 12px;font-size:13px">
+    <input v-model="scanPath" @keydown.enter="doScan" :placeholder="t('scanPathPlaceholder')" style="font-size:13px;padding:8px 14px;">
+    <button class="btn-secondary" @click="browseFolder" :disabled="browsing" :title="t('browseFolderTitle')" style="padding:8px 12px;font-size:13px">
       {{ browsing ? '...' : '📂' }}
     </button>
     <button class="btn-primary" @click="doScan" :disabled="scanning">
       <span v-if="scanning" class="loading" style="vertical-align:middle;margin-right:4px"></span>
-      {{ scanning ? '扫描中...' : '打开' }}
+      {{ scanning ? t('scanning') : t('openFolder') }}
     </button>
-    <span v-if="songs.length" class="song-count-badge">{{ songs.length }} 首</span>
-    <button class="btn-secondary" @click="showSettings=true" style="font-size:15px;padding:6px 12px" title="设置">⚙</button>
+    <div class="topbar-actions">
+      <span v-if="songs.length" class="song-count-badge">{{ t('songCount', { count: songs.length }) }}</span>
+      <div class="language-menu" @click.stop>
+        <button
+          type="button"
+          class="btn-secondary toolbar-icon-btn"
+          :title="t('language')"
+          @click="toggleLanguageMenu"
+        >🌐</button>
+        <div v-if="languageMenuOpen" class="menu-panel">
+          <button
+            v-for="option in languageOptions"
+            :key="option.value"
+            type="button"
+            class="btn-secondary language-menu-option"
+            :class="{ active: settingsData.ui_language === option.value }"
+            @click="selectLanguageOption(option.value)"
+          >
+            <span>{{ option.shortLabel }}</span>
+            <span v-if="settingsData.ui_language === option.value">✓</span>
+          </button>
+        </div>
+      </div>
+      <div class="theme-menu" :class="{ open: themeMenuOpen }" @click.stop>
+        <button
+          type="button"
+          class="btn-secondary toolbar-icon-btn theme-menu-trigger"
+          :title="t('themeMode')"
+          @click="toggleThemeMenu"
+        >
+          <span>{{ currentThemeIcon }}</span>
+        </button>
+        <div v-if="themeMenuOpen" class="menu-panel theme-menu-panel">
+          <div class="theme-menu-options">
+            <button
+              v-for="option in themeOptions"
+              :key="option.value"
+              type="button"
+              class="theme-menu-option"
+              :class="{ active: settingsData.theme_mode === option.value }"
+              :title="t(option.labelKey)"
+              @click="selectThemeOption(option.value)"
+            >
+              <span>{{ option.icon }}</span>
+              <span v-if="settingsData.theme_mode === option.value" class="theme-menu-check">✓</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <button class="btn-secondary" @click="showSettings=true" style="font-size:15px;padding:6px 12px" :title="t('settings')">⚙</button>
+    </div>
   </div>
 
   <!-- Main layout -->
@@ -785,21 +1076,21 @@ button {
     <!-- Left panel -->
     <div class="left-panel">
       <div class="left-header">
-        <input class="search-box" v-model="searchQuery" placeholder="搜索标题 / 艺术家 / 专辑..." @input="onSearch">
+        <input class="search-box" v-model="searchQuery" :placeholder="t('searchPlaceholder')" @input="onSearch">
         <div class="left-controls">
           <select v-model="viewMode" style="width:80px">
-            <option value="flat">平铺</option>
-            <option value="tree">树形</option>
+            <option value="flat">{{ t('viewFlat') }}</option>
+            <option value="tree">{{ t('viewTree') }}</option>
           </select>
           <select v-model="sortBy" style="width:90px">
-            <option value="title">按标题</option>
-            <option value="artist">按艺术家</option>
-            <option value="album">按专辑</option>
-            <option value="filename">按文件名</option>
+            <option value="title">{{ t('sortTitle') }}</option>
+            <option value="artist">{{ t('sortArtist') }}</option>
+            <option value="album">{{ t('sortAlbum') }}</option>
+            <option value="filename">{{ t('sortFilename') }}</option>
           </select>
           <div class="select-all">
             <input type="checkbox" :checked="allChecked" @change="toggleAll">
-            <span>全选</span>
+            <span>{{ t('selectAll') }}</span>
           </div>
         </div>
       </div>
@@ -826,7 +1117,7 @@ button {
             <div class="tree-header" @click="toggleTreeNode('a:'+artist)">
               <span :class="['tree-arrow', {open: isTreeOpen('a:'+artist)}]">▶</span>
               <input type="checkbox" :checked="isArtistChecked(artist)" @click.stop @change="toggleArtistCheck(artist)">
-              <strong>{{ artist || '未知艺术家' }}</strong>
+              <strong>{{ artist || t('unknownArtist') }}</strong>
               <span style="font-size:11px;color:var(--text2)">{{ countArtistSongs(artist) }}</span>
             </div>
             <div class="tree-children" v-show="isTreeOpen('a:'+artist)">
@@ -834,7 +1125,7 @@ button {
                 <div class="tree-header" @click="toggleTreeNode('b:'+artist+'/'+album)">
                   <span :class="['tree-arrow', {open: isTreeOpen('b:'+artist+'/'+album)}]">▶</span>
                   <input type="checkbox" :checked="isAlbumChecked(artist, album)" @click.stop @change="toggleAlbumCheck(artist, album)">
-                  <span>{{ album || '未知专辑' }}</span>
+                  <span>{{ album || t('unknownAlbum') }}</span>
                   <span style="font-size:11px;color:var(--text2)">{{ asongs.length }}</span>
                 </div>
                 <div class="tree-children" v-show="isTreeOpen('b:'+artist+'/'+album)">
@@ -862,45 +1153,49 @@ button {
       <!-- Toolbar -->
       <div class="toolbar" v-if="selectedIds.length">
         <div class="toolbar-row">
-          <span class="toolbar-count">已选 {{ selectedIds.length }} 首</span>
-          <button class="btn-primary btn-sm" @click="saveAll" :disabled="batchBusy">全部保存</button>
-          <button class="btn-secondary btn-sm" @click="batchSearchCovers" :disabled="batchBusy">搜索封面</button>
-          <button class="btn-secondary btn-sm" @click="batchSyncAlbumCovers" :disabled="batchBusy">同步专辑封面</button>
-          <button class="btn-secondary btn-sm" @click="batchGetLyrics" :disabled="batchBusy">获取歌词</button>
+          <span class="toolbar-count">{{ t('selectedSongs', { count: selectedIds.length }) }}</span>
+          <button class="btn-primary btn-sm" @click="saveAll" :disabled="batchBusy">{{ t('saveAll') }}</button>
+          <button class="btn-secondary btn-sm" @click="batchSearchCovers" :disabled="batchBusy">{{ t('searchCover') }}</button>
+          <button class="btn-secondary btn-sm" @click="batchSyncAlbumCovers" :disabled="batchBusy">{{ t('syncAlbumCover') }}</button>
+          <button class="btn-secondary btn-sm" @click="batchGetLyrics" :disabled="batchBusy">{{ t('fetchLyrics') }}</button>
         </div>
         <div class="toolbar-progress" v-if="batchBusy">
           <span>{{ batchStatus }}</span>
           <div class="bar"><div class="bar-fill" :style="{width: batchPercent+'%'}"></div></div>
         </div>
         <div class="report" v-if="batchReport.length && !batchBusy">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px" v-if="batchReport.some(r => r.reason === '多个候选' && r.results?.length)">
-            <span style="font-size:12px;color:var(--text2)">{{ batchReport.filter(r=>r.reason==='多个候选').length }} 首有多个候选</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px" v-if="batchReport.some(r => r.reason === 'multiple_candidates' && r.results?.length)">
+            <span style="font-size:12px;color:var(--text2)">{{ t('multipleCandidatesCount', { count: batchReport.filter(r => r.reason === 'multiple_candidates').length }) }}</span>
             <button class="btn-secondary btn-sm" @click="applyDefaultLyrics" :disabled="lrcDefaultApplying">
               <span v-if="lrcDefaultApplying" class="loading" style="vertical-align:middle;margin-right:4px"></span>
-              {{ lrcDefaultApplying ? '应用中...' : '全部取第一个' }}
+              {{ lrcDefaultApplying ? t('applying') : t('applyFirstCandidate') }}
             </button>
           </div>
           <div class="report-line" v-for="(r, i) in batchReport" :key="i">
             <a v-if="r.id" @click="jumpToSong(r.id)">{{ r.filename }}</a>
             <span v-else>{{ r.filename }}</span>
-            → {{ r.reason }}
+            → {{ reasonLabel(r.reason) }}
           </div>
         </div>
       </div>
 
       <!-- Card area -->
       <div class="card-area" v-if="selectedIds.length">
+        <div class="detail-loading" v-if="detailLoading">
+          <span class="loading"></span>
+          <span>{{ t('loadingSongDetails') }}</span>
+        </div>
         <div v-for="sid in selectedIds" :key="sid" :class="['song-card', {dirty: isCardDirty(sid)}]">
           <div class="card-header">
             <span class="card-filename">{{ getCard(sid)?.filename }}</span>
-            <button class="btn-secondary btn-sm" @click="autoFillMetadata(sid)" :disabled="getCard(sid)?._autoFilling" style="margin-left:auto;font-size:11px" title="搜索 iTunes 并填入缺失字段">
-              {{ getCard(sid)?._autoFilling ? '搜索中...' : '联网补全' }}
+            <button class="btn-secondary btn-sm" @click="autoFillMetadata(sid)" :disabled="getCard(sid)?._autoFilling" style="margin-left:auto;font-size:11px" :title="t('autoFillTitle')">
+              {{ getCard(sid)?._autoFilling ? t('searching') : t('autoFill') }}
             </button>
-            <button class="btn-secondary btn-sm" @click="openVersionPicker(sid)" :disabled="getCard(sid)?._autoFilling" style="font-size:11px" title="选择专辑版本">
-              选版本
+            <button class="btn-secondary btn-sm" @click="openVersionPicker(sid)" :disabled="getCard(sid)?._autoFilling" style="font-size:11px" :title="t('pickVersionTitle')">
+              {{ t('pickVersion') }}
             </button>
             <span class="card-save-status" style="margin-left:8px" v-if="getCard(sid)?._saving"><span class="loading"></span></span>
-            <span class="card-save-status" style="margin-left:8px;color:var(--green)" v-else-if="getCard(sid)?._saved">已保存</span>
+            <span class="card-save-status" style="margin-left:8px;color:var(--green)" v-else-if="getCard(sid)?._saved">{{ t('saved') }}</span>
           </div>
           <div class="card-body">
             <div class="cover-area">
@@ -910,47 +1205,51 @@ button {
               <div v-else class="cover-placeholder" @click="triggerCoverUpload(sid)">♪</div>
               <input type="file" :ref="'coverInput'+sid" accept="image/*" style="display:none" @change="onCoverUpload(sid, $event)">
               <div class="cover-btns">
-                <button class="btn-secondary btn-sm" @click="triggerCoverUpload(sid)">上传</button>
-                <button class="btn-secondary btn-sm" @click="openCoverSearch(sid)">搜索封面</button>
-                <button class="btn-secondary btn-sm" @click="openCopyFromLib(sid)">从库复制</button>
+                <button class="btn-secondary btn-sm" @click="triggerCoverUpload(sid)">{{ t('upload') }}</button>
+                <button class="btn-secondary btn-sm" @click="openCoverSearch(sid)">{{ t('searchCover') }}</button>
+                <button class="btn-secondary btn-sm" @click="openCopyFromLib(sid)">{{ t('copyFromLibrary') }}</button>
               </div>
-              <button class="btn-secondary btn-sm" style="font-size:11px" @click="syncAlbumCover(sid)">同步到整张专辑</button>
+              <button class="btn-secondary btn-sm" style="font-size:11px" @click="syncAlbumCover(sid)">{{ t('syncToAlbum') }}</button>
             </div>
             <div class="fields-area">
-              <div class="field"><label>标题</label><input v-model="getCard(sid).title" @input="markDirty(sid)"></div>
-              <div class="field"><label>艺术家</label><input v-model="getCard(sid).artist" @input="markDirty(sid)"></div>
-              <div class="field"><label>专辑</label><input v-model="getCard(sid).album" @input="markDirty(sid)"></div>
-              <div class="field"><label>专辑艺术家</label><input v-model="getCard(sid).album_artist" @input="markDirty(sid)"></div>
-              <div class="field"><label>年份</label><input v-model="getCard(sid).year" @input="markDirty(sid)" style="width:80px"></div>
-              <div class="field"><label>曲目编号</label><input v-model="getCard(sid).track_number" @input="markDirty(sid)" placeholder="1/12" style="width:80px"></div>
-              <div class="field"><label>碟号</label><input v-model="getCard(sid).disc_number" @input="markDirty(sid)" style="width:60px"></div>
-              <div class="field"><label>流派</label><input v-model="getCard(sid).genre" @input="markDirty(sid)"></div>
-              <div class="field field-full"><label>作曲</label><input v-model="getCard(sid).composer" @input="markDirty(sid)"></div>
-              <div class="field field-full"><label>评论</label><textarea v-model="getCard(sid).comment" @input="markDirty(sid)" rows="2"></textarea></div>
+              <div class="field"><label>{{ t('title') }}</label><input v-model="getCard(sid).title" @input="markDirty(sid)"></div>
+              <div class="field"><label>{{ t('artist') }}</label><input v-model="getCard(sid).artist" @input="markDirty(sid)"></div>
+              <div class="field"><label>{{ t('album') }}</label><input v-model="getCard(sid).album" @input="markDirty(sid)"></div>
+              <div class="field"><label>{{ t('albumArtist') }}</label><input v-model="getCard(sid).album_artist" @input="markDirty(sid)"></div>
+              <div class="field-group field-group-compact">
+                <div class="field field-compact"><label>{{ t('year') }}</label><input v-model="getCard(sid).year" @input="markDirty(sid)"></div>
+                <div class="field field-compact"><label>{{ t('trackNumber') }}</label><input v-model="getCard(sid).track_number" @input="markDirty(sid)" :placeholder="t('trackNumberPlaceholder')"></div>
+                <div class="field field-compact"><label>{{ t('discNumber') }}</label><input v-model="getCard(sid).disc_number" @input="markDirty(sid)"></div>
+                <div class="field field-compact"><label>{{ t('genre') }}</label><input v-model="getCard(sid).genre" @input="markDirty(sid)"></div>
+              </div>
+              <div class="field-group field-group-secondary">
+                <div class="field"><label>{{ t('composer') }}</label><input v-model="getCard(sid).composer" @input="markDirty(sid)"></div>
+                <div class="field"><label>{{ t('comment') }}</label><textarea v-model="getCard(sid).comment" @input="markDirty(sid)" rows="2"></textarea></div>
+              </div>
             </div>
           </div>
           <!-- LRC section -->
           <div class="lrc-section">
             <div class="lrc-header">
-              <span class="lrc-status">原文：<span :class="getCard(sid)?.has_lrc?'has':'no'">{{ getCard(sid)?.has_lrc?'✓ 已有':'✗ 无' }}</span></span>
-              <span class="lrc-status">译文：<span :class="getCard(sid)?.has_lrc_trans?'has':'no'">{{ getCard(sid)?.has_lrc_trans?'✓ 已有':'✗ 无' }}</span></span>
-              <button class="btn-secondary btn-sm" @click="openLrcSearch(sid)">获取歌词</button>
-              <button class="btn-secondary btn-sm" @click="openLrcEdit(sid)" v-if="getCard(sid)?.has_lrc">编辑</button>
-              <button class="btn-danger btn-sm" @click="deleteLrc(sid, 'all')" v-if="getCard(sid)?.has_lrc">删除</button>
+              <span class="lrc-status">{{ t('lyricsOriginal') }}：<span :class="getCard(sid)?.has_lrc?'has':'no'">{{ getCard(sid)?.has_lrc ? t('statusPresent') : t('statusMissing') }}</span></span>
+              <span class="lrc-status">{{ t('lyricsTranslation') }}：<span :class="getCard(sid)?.has_lrc_trans?'has':'no'">{{ getCard(sid)?.has_lrc_trans ? t('statusPresent') : t('statusMissing') }}</span></span>
+              <button class="btn-secondary btn-sm" @click="openLrcSearch(sid)">{{ t('fetchLyrics') }}</button>
+              <button class="btn-secondary btn-sm" @click="openLrcEdit(sid)" v-if="getCard(sid)?.has_lrc">{{ t('edit') }}</button>
+              <button class="btn-danger btn-sm" @click="deleteLrc(sid, 'all')" v-if="getCard(sid)?.has_lrc">{{ t('delete') }}</button>
             </div>
             <div class="lrc-preview" v-if="getCard(sid)?._lrcContent">{{ getCard(sid)._lrcContent.substring(0, 500) }}</div>
           </div>
           <div class="card-footer">
-            <button class="btn-secondary" @click="cancelCard(sid)" v-if="isCardDirty(sid)">取消</button>
+            <button class="btn-secondary" @click="cancelCard(sid)" v-if="isCardDirty(sid)">{{ t('cancel') }}</button>
             <button :class="isCardDirty(sid)?'btn-success':'btn-secondary'" @click="saveSong(sid)">
-              保存
+              {{ t('save') }}
             </button>
           </div>
         </div>
       </div>
       <div class="empty-state" v-else>
         <div class="empty-state-icon">♪</div>
-        <div class="empty-state-text">{{ songs.length ? '从左栏选择歌曲进行编辑' : '在顶栏输入文件夹路径并打开' }}</div>
+        <div class="empty-state-text">{{ songs.length ? t('emptySelectSong') : t('emptyOpenFolder') }}</div>
       </div>
     </div>
   </div>
@@ -958,11 +1257,11 @@ button {
   <!-- Cover search modal -->
   <div class="modal-overlay" v-if="coverSearchModal.show" @click.self="coverSearchModal.show=false">
     <div class="modal">
-      <h3>搜索封面</h3>
+      <h3>{{ t('searchCover') }}</h3>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <input v-model="coverSearchModal.artist" placeholder="艺术家" style="flex:1">
-        <input v-model="coverSearchModal.album" placeholder="专辑" style="flex:1">
-        <button class="btn-primary btn-sm" @click="doCoverSearch" :disabled="coverSearchModal.loading">搜索</button>
+        <input v-model="coverSearchModal.artist" :placeholder="t('artist')" style="flex:1">
+        <input v-model="coverSearchModal.album" :placeholder="t('album')" style="flex:1">
+        <button class="btn-primary btn-sm" @click="doCoverSearch" :disabled="coverSearchModal.loading">{{ t('search') }}</button>
       </div>
       <div v-if="coverSearchModal.loading" style="text-align:center;padding:20px"><span class="loading"></span></div>
       <div class="cover-grid" v-else>
@@ -974,11 +1273,11 @@ button {
           <div class="album-name">{{ c.album }}</div>
         </div>
       </div>
-      <div v-if="!coverSearchModal.loading && !coverSearchModal.results.length" style="text-align:center;color:var(--text2);padding:20px">无结果</div>
+      <div v-if="!coverSearchModal.loading && !coverSearchModal.results.length" style="text-align:center;color:var(--text2);padding:20px">{{ t('noResults') }}</div>
       <div class="modal-actions">
-        <button class="btn-secondary" @click="coverSearchModal.show=false">取消</button>
+        <button class="btn-secondary" @click="coverSearchModal.show=false">{{ t('cancel') }}</button>
         <button class="btn-primary" @click="applyCoverFromSearch" :disabled="coverSearchModal.selectedIdx<0||coverSearchModal.downloading">
-          {{ coverSearchModal.downloading ? '下载中...' : '使用选中封面' }}
+          {{ coverSearchModal.downloading ? t('downloading') : t('useSelectedCover') }}
         </button>
       </div>
     </div>
@@ -987,8 +1286,8 @@ button {
   <!-- Copy from library modal -->
   <div class="modal-overlay" v-if="copyFromLibModal.show" @click.self="copyFromLibModal.show=false">
     <div class="modal">
-      <h3>从库中复制封面</h3>
-      <input v-model="copyFromLibModal.query" placeholder="搜索..." style="width:100%;margin-bottom:10px">
+      <h3>{{ t('copyFromLibrary') }}</h3>
+      <input v-model="copyFromLibModal.query" :placeholder="t('searchPlaceholderShort')" style="width:100%;margin-bottom:10px">
       <div style="max-height:400px;overflow-y:auto">
         <div v-for="s in copyFromLibFiltered" :key="s.id"
              :class="['song-item', {active: copyFromLibModal.selectedId===s.id}]"
@@ -1001,8 +1300,8 @@ button {
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn-secondary" @click="copyFromLibModal.show=false">取消</button>
-        <button class="btn-primary" @click="applyCoverFromLib" :disabled="!copyFromLibModal.selectedId">使用</button>
+        <button class="btn-secondary" @click="copyFromLibModal.show=false">{{ t('cancel') }}</button>
+        <button class="btn-primary" @click="applyCoverFromLib" :disabled="!copyFromLibModal.selectedId">{{ t('use') }}</button>
       </div>
     </div>
   </div>
@@ -1010,11 +1309,11 @@ button {
   <!-- Lyrics search modal -->
   <div class="modal-overlay" v-if="lrcSearchModal.show" @click.self="lrcSearchModal.show=false">
     <div class="modal">
-      <h3>获取歌词</h3>
+      <h3>{{ t('fetchLyrics') }}</h3>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <input v-model="lrcSearchModal.artist" placeholder="艺术家" style="flex:1">
-        <input v-model="lrcSearchModal.title" placeholder="标题" style="flex:1">
-        <button class="btn-primary btn-sm" @click="doLrcSearch" :disabled="lrcSearchModal.loading">搜索</button>
+        <input v-model="lrcSearchModal.artist" :placeholder="t('artist')" style="flex:1">
+        <input v-model="lrcSearchModal.title" :placeholder="t('title')" style="flex:1">
+        <button class="btn-primary btn-sm" @click="doLrcSearch" :disabled="lrcSearchModal.loading">{{ t('search') }}</button>
       </div>
       <div v-if="lrcSearchModal.loading" style="text-align:center;padding:20px"><span class="loading"></span></div>
       <div v-else>
@@ -1023,21 +1322,21 @@ button {
              @click="lrcSearchModal.selectedIdx=i">
           <div class="lyric-meta">
             <span class="badge" :class="r.source==='netease'?'badge-aac':'badge-flac'">{{ r.source }}</span>
-            <span v-if="r.has_synced" style="color:var(--green)">✦ 带时间轴</span>
-            <span v-if="r.has_translated" style="color:var(--accent2)">✦ 含译文</span>
+            <span v-if="r.has_synced" style="color:var(--green)">✦ {{ t('withTimeline') }}</span>
+            <span v-if="r.has_translated" style="color:var(--accent2)">✦ {{ t('withTranslation') }}</span>
             <span>{{ r.title }} - {{ r.artist }}</span>
           </div>
           <div class="lyric-preview-text">{{ (r.synced || r.plain || '').substring(0, 200) }}</div>
         </div>
       </div>
-      <div v-if="!lrcSearchModal.loading && !lrcSearchModal.results.length" style="text-align:center;color:var(--text2);padding:20px">无结果</div>
+      <div v-if="!lrcSearchModal.loading && !lrcSearchModal.results.length" style="text-align:center;color:var(--text2);padding:20px">{{ t('noResults') }}</div>
       <div style="display:flex;gap:12px;margin-top:10px" v-if="lrcSearchModal.results.length">
-        <label style="font-size:12px"><input type="checkbox" v-model="lrcSearchModal.saveSynced"> 保存原文 .lrc</label>
-        <label style="font-size:12px"><input type="checkbox" v-model="lrcSearchModal.saveTrans"> 保存译文 .trans.lrc</label>
+        <label style="font-size:12px"><input type="checkbox" v-model="lrcSearchModal.saveSynced"> {{ t('saveOriginalLrc') }}</label>
+        <label style="font-size:12px"><input type="checkbox" v-model="lrcSearchModal.saveTrans"> {{ t('saveTranslatedLrc') }}</label>
       </div>
       <div class="modal-actions">
-        <button class="btn-secondary" @click="lrcSearchModal.show=false">取消</button>
-        <button class="btn-primary" @click="applyLrc" :disabled="lrcSearchModal.selectedIdx<0">保存</button>
+        <button class="btn-secondary" @click="lrcSearchModal.show=false">{{ t('cancel') }}</button>
+        <button class="btn-primary" @click="applyLrc" :disabled="lrcSearchModal.selectedIdx<0">{{ t('save') }}</button>
       </div>
     </div>
   </div>
@@ -1045,14 +1344,14 @@ button {
   <!-- LRC edit modal -->
   <div class="modal-overlay" v-if="lrcEditModal.show" @click.self="lrcEditModal.show=false">
     <div class="modal">
-      <h3>编辑歌词</h3>
-      <div style="margin-bottom:8px;font-size:12px;color:var(--text2)">原文 .lrc</div>
+      <h3>{{ t('editLyrics') }}</h3>
+      <div style="margin-bottom:8px;font-size:12px;color:var(--text2)">{{ t('lyricsOriginal') }} .lrc</div>
       <textarea v-model="lrcEditModal.synced" rows="12" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:12px"></textarea>
-      <div style="margin:8px 0;font-size:12px;color:var(--text2)">译文 .trans.lrc</div>
+      <div style="margin:8px 0;font-size:12px;color:var(--text2)">{{ t('lyricsTranslation') }} .trans.lrc</div>
       <textarea v-model="lrcEditModal.translated" rows="8" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:12px"></textarea>
       <div class="modal-actions">
-        <button class="btn-secondary" @click="lrcEditModal.show=false">取消</button>
-        <button class="btn-primary" @click="saveLrcEdit">保存</button>
+        <button class="btn-secondary" @click="lrcEditModal.show=false">{{ t('cancel') }}</button>
+        <button class="btn-primary" @click="saveLrcEdit">{{ t('save') }}</button>
       </div>
     </div>
   </div>
@@ -1060,11 +1359,11 @@ button {
   <!-- Auto-fill version picker modal -->
   <div class="modal-overlay" v-if="autoFillModal.show" @click.self="autoFillModal.show=false">
     <div class="modal" style="max-width:580px">
-      <h3>{{ autoFillModal.mode==='version' ? '选择专辑版本' : '选择版本' }}</h3>
+      <h3>{{ autoFillModal.mode==='version' ? t('pickAlbumVersion') : t('pickVersionModal') }}</h3>
       <p style="font-size:12px;color:var(--text2);margin-bottom:14px">
         {{ autoFillModal.mode==='version'
-          ? '选择后将覆盖写入：专辑、专辑艺术家、年份、曲目编号、碟号、流派'
-          : '找到多个版本，请选择最符合的一个后点「应用」' }}
+          ? t('pickAlbumVersionHint')
+          : t('pickVersionHint') }}
       </p>
       <div style="display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto">
         <div v-for="(r, i) in autoFillModal.results" :key="i"
@@ -1085,17 +1384,17 @@ button {
             </div>
             <div style="text-align:right;flex-shrink:0;font-size:11px;color:var(--text2);line-height:1.8">
               <div v-if="r.year">{{ r.year }}</div>
-              <div v-if="r.track_number">Track {{ r.track_number }}<span v-if="r.disc_number && r.disc_number!=='1'"> · Disc {{ r.disc_number }}</span></div>
+              <div v-if="r.track_number">{{ trackSummary(r) }}</div>
               <div v-if="r.genre">{{ r.genre }}</div>
             </div>
           </div>
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn-secondary" @click="autoFillModal.show=false" :disabled="autoFillModal.applying">取消</button>
+        <button class="btn-secondary" @click="autoFillModal.show=false" :disabled="autoFillModal.applying">{{ t('cancel') }}</button>
         <button class="btn-primary" @click="applyAutoFill" :disabled="autoFillModal.selectedIdx<0 || autoFillModal.applying">
           <span v-if="autoFillModal.applying" class="loading" style="vertical-align:middle;margin-right:4px"></span>
-          {{ autoFillModal.applying ? '下载封面...' : '应用' }}
+          {{ autoFillModal.applying ? t('downloadingCover') : t('apply') }}
         </button>
       </div>
     </div>
@@ -1104,32 +1403,47 @@ button {
   <!-- Settings modal -->
   <div class="modal-overlay" v-if="showSettings" @click.self="showSettings=false">
     <div class="modal" style="max-width:550px">
-      <h3>设置</h3>
+      <h3>{{ t('settings') }}</h3>
       <div class="settings-group">
-        <h4>网易云 Cookie</h4>
-        <textarea v-model="settingsData.netease_cookie" rows="3" style="width:100%;font-size:11px" placeholder="粘贴 Cookie 字符串..."></textarea>
-        <div class="settings-hint">打开浏览器 → 登录 music.163.com → F12 → Network → 任意请求 → 复制 Request Headers 中的 Cookie 字段值</div>
+        <h4>{{ t('interfacePreferences') }}</h4>
+        <div class="settings-row">
+          <label>{{ t('language') }}</label>
+          <select v-model="settingsData.ui_language" @change="changeLanguage(settingsData.ui_language)">
+            <option v-for="option in languageOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <label>{{ t('themeMode') }}</label>
+          <select v-model="settingsData.theme_mode" @change="changeThemeMode(settingsData.theme_mode)">
+            <option v-for="option in themeOptions" :key="option.value" :value="option.value">{{ t(option.labelKey) }}</option>
+          </select>
+        </div>
       </div>
       <div class="settings-group">
-        <h4>封面压缩</h4>
+        <h4>{{ t('neteaseCookie') }}</h4>
+        <textarea v-model="settingsData.netease_cookie" rows="3" style="width:100%;font-size:11px" :placeholder="t('neteaseCookiePlaceholder')"></textarea>
+        <div class="settings-hint">{{ t('neteaseCookieHint') }}</div>
+      </div>
+      <div class="settings-group">
+        <h4>{{ t('coverCompression') }}</h4>
         <div class="settings-row">
-          <label>最大边长 (px)</label>
+          <label>{{ t('maxCoverSize') }}</label>
           <input type="number" v-model.number="settingsData.cover_max_size" style="width:80px">
         </div>
         <div class="settings-row">
-          <label>JPEG 品质</label>
+          <label>{{ t('jpegQuality') }}</label>
           <input type="number" v-model.number="settingsData.cover_quality" min="1" max="100" style="width:80px">
         </div>
       </div>
       <div class="settings-group">
-        <h4>LRC 来源优先级</h4>
+        <h4>{{ t('lrcSourcePriority') }}</h4>
         <select v-model="settingsData.lrc_source_priority" style="width:180px">
-          <option value="netease">网易云优先</option>
-          <option value="lrclib">LRCLIB 优先</option>
+          <option value="netease">{{ t('neteaseFirst') }}</option>
+          <option value="lrclib">{{ t('lrclibFirst') }}</option>
         </select>
       </div>
       <div class="settings-group">
-        <h4>iTunes 搜索地区</h4>
+        <h4>{{ t('itunesSearchRegions') }}</h4>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <label style="font-size:12px" v-for="c in itunesCountryOptions" :key="c.code">
             <input type="checkbox" :checked="settingsData.itunes_countries?.includes(c.code)"
@@ -1137,27 +1451,373 @@ button {
             {{ c.label }}
           </label>
         </div>
-        <div class="settings-hint">同时搜索多个地区可获得更全的结果，日语歌建议勾选 JP</div>
+        <div class="settings-hint">{{ t('itunesRegionsHint') }}</div>
       </div>
       <div class="settings-group">
-        <h4>列表显示列</h4>
+        <h4>{{ t('listColumns') }}</h4>
         <label style="font-size:12px;margin-right:12px" v-for="(v, k) in settingsData.list_columns" :key="k">
-          <input type="checkbox" v-model="settingsData.list_columns[k]"> {{ columnNames[k] || k }}
+          <input type="checkbox" v-model="settingsData.list_columns[k]"> {{ t(columnNames[k] || k) }}
         </label>
       </div>
       <div class="modal-actions">
-        <button class="btn-secondary" @click="showSettings=false">取消</button>
-        <button class="btn-primary" @click="saveSettingsData">保存设置</button>
+        <button class="btn-secondary" @click="showSettings=false">{{ t('cancel') }}</button>
+        <button class="btn-primary" @click="saveSettingsData">{{ t('saveSettings') }}</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue
+const { createApp, ref, reactive, computed, onMounted, nextTick } = Vue
 
 createApp({
   setup() {
+    const initialPrefs = window.__EZ_PREFS || { language: 'zh-CN', themeMode: 'auto' }
+    const currentLanguage = ref(initialPrefs.language)
+    const systemThemeMedia = window.matchMedia('(prefers-color-scheme: dark)')
+    const translations = {
+      'zh-CN': {
+        scanPathPlaceholder: '输入音乐文件夹路径，如 ~/Music',
+        browseFolderTitle: '在 Finder 中选择文件夹',
+        scanning: '扫描中...',
+        openFolder: '打开',
+        songCount: '{count} 首',
+        settings: '设置',
+        themeMode: '主题模式',
+        themeLight: '日间模式',
+        themeDark: '夜间模式',
+        themeAuto: '跟随设备',
+        themeLightShort: '日间',
+        themeDarkShort: '夜间',
+        themeAutoShort: '跟随',
+        language: '界面语言',
+        searchPlaceholder: '搜索标题 / 艺术家 / 专辑...',
+        searchPlaceholderShort: '搜索...',
+        viewFlat: '平铺',
+        viewTree: '树形',
+        sortTitle: '按标题',
+        sortArtist: '按艺术家',
+        sortAlbum: '按专辑',
+        sortFilename: '按文件名',
+        selectAll: '全选',
+        unknownArtist: '未知艺术家',
+        unknownAlbum: '未知专辑',
+        selectedSongs: '已选 {count} 首',
+        saveAll: '全部保存',
+        searchCover: '搜索封面',
+        syncAlbumCover: '同步专辑封面',
+        fetchLyrics: '获取歌词',
+        multipleCandidatesCount: '{count} 首有多个候选',
+        applying: '应用中...',
+        applyFirstCandidate: '全部取第一个',
+        autoFillTitle: '搜索 iTunes 并填入缺失字段',
+        autoFill: '联网补全',
+        searching: '搜索中...',
+        pickVersionTitle: '选择专辑版本',
+        pickVersion: '选版本',
+        saved: '已保存',
+        upload: '上传',
+        copyFromLibrary: '从库复制',
+        syncToAlbum: '同步到整张专辑',
+        title: '标题',
+        artist: '艺术家',
+        album: '专辑',
+        albumArtist: '专辑艺术家',
+        year: '年份',
+        trackNumber: '曲目编号',
+        trackNumberPlaceholder: '1/12',
+        discNumber: '碟号',
+        genre: '流派',
+        composer: '作曲',
+        comment: '评论',
+        lyricsOriginal: '原文',
+        lyricsTranslation: '译文',
+        statusPresent: '✓ 已有',
+        statusMissing: '✗ 无',
+        edit: '编辑',
+        delete: '删除',
+        cancel: '取消',
+        save: '保存',
+        emptySelectSong: '从左栏选择歌曲进行编辑',
+        emptyOpenFolder: '在顶栏输入文件夹路径并打开',
+        search: '搜索',
+        noResults: '无结果',
+        loadingSongDetails: '正在加载歌曲详情...',
+        downloading: '下载中...',
+        downloadingCover: '下载封面...',
+        useSelectedCover: '使用选中封面',
+        use: '使用',
+        withTimeline: '带时间轴',
+        withTranslation: '含译文',
+        saveOriginalLrc: '保存原文 .lrc',
+        saveTranslatedLrc: '保存译文 .trans.lrc',
+        editLyrics: '编辑歌词',
+        pickAlbumVersion: '选择专辑版本',
+        pickVersionModal: '选择版本',
+        pickAlbumVersionHint: '选择后将覆盖写入：专辑、专辑艺术家、年份、曲目编号、碟号、流派',
+        pickVersionHint: '找到多个版本，请选择最符合的一个后点「应用」',
+        apply: '应用',
+        disc: '碟号',
+        trackLabel: '曲目',
+        interfacePreferences: '界面偏好',
+        neteaseCookie: '网易云 Cookie',
+        neteaseCookiePlaceholder: '粘贴 Cookie 字符串...',
+        neteaseCookieHint: '打开浏览器 → 登录 music.163.com → F12 → Network → 任意请求 → 复制 Request Headers 中的 Cookie 字段值',
+        coverCompression: '封面压缩',
+        maxCoverSize: '最大边长 (px)',
+        jpegQuality: 'JPEG 品质',
+        lrcSourcePriority: 'LRC 来源优先级',
+        neteaseFirst: '网易云优先',
+        lrclibFirst: 'LRCLIB 优先',
+        itunesSearchRegions: 'iTunes 搜索地区',
+        itunesRegionsHint: '同时搜索多个地区可获得更全的结果，日语歌建议勾选 JP',
+        listColumns: '列表显示列',
+        saveSettings: '保存设置',
+        column_cover_thumbnail: '封面缩略图',
+        column_artist: '艺术家',
+        column_album: '专辑',
+        column_duration: '时长',
+        column_format_badge: '格式',
+        column_lrc_badge: 'LRC',
+        country_jp: '🇯🇵 JP 日本',
+        country_us: '🇺🇸 US 美国',
+        country_gb: '🇬🇧 GB 英国',
+        country_kr: '🇰🇷 KR 韩国',
+        country_tw: '🇹🇼 TW 台湾',
+        country_cn: '🇨🇳 CN 中国',
+        unsavedChangesConfirm: '有未保存的修改，确定切换？',
+        scanComplete: '扫描完成，共 {count} 首',
+        loadFailed: '加载失败: {message}',
+        autoFillFields: '已补全 {count} 个字段',
+        metadataComplete: '元数据已完整，无需补全',
+        albumFieldsUpdatedWithCover: '已更新 {count} 个专辑字段并下载封面',
+        albumFieldsUpdatedCoverFailed: '专辑字段已更新，封面下载失败: {message}',
+        albumFieldsUpdatedNoCover: '已更新 {count} 个专辑字段（无封面）',
+        selectedVersionNoAlbumInfo: '所选版本无可用专辑信息',
+        noMatchedResult: '未找到匹配结果',
+        searchFailed: '搜索失败: {message}',
+        autoFillFailed: '补全失败: {message}',
+        saveFailed: '保存失败: {message}',
+        saveAllDone: '全部保存完成',
+        selectedCoverNeedsSave: '封面已选中，请保存',
+        coverCopiedNeedsSave: '封面已复制，请保存',
+        getCoverFailed: '获取封面失败',
+        suggestSaveCover: '建议先保存当前封面',
+        noOtherSongsInAlbum: '同专辑无其他歌曲',
+        syncAlbumCoverConfirm: '将当前封面同步到同专辑 {count} 首歌曲？',
+        updatedSongsCount: '已更新 {count} 首歌曲',
+        lyricsSaved: '歌词已保存',
+        lyricsDeleted: '歌词已删除',
+        deleteLyricsConfirm: '确定删除歌词？',
+        processingSong: '正在处理：{name}',
+        coverSearchCompleteManual: '封面搜索完成，{count} 首需手动处理',
+        coverSearchComplete: '封面搜索完成',
+        lyricsFetchCompleteManual: '歌词获取完成，{count} 首需手动处理',
+        lyricsFetchComplete: '歌词获取完成',
+        appliedFirstLyrics: '已为 {count} 首歌应用第一个搜索结果',
+        syncDone: '同步完成：{albums} 张专辑，{songs} 首更新',
+        syncDoneToast: '同步完成，{count} 首更新',
+        settingsSaved: '设置已保存',
+        reason_not_found: '未找到',
+        reason_multiple_candidates: '多个候选',
+        reason_search_failed: '搜索失败',
+        reason_no_cover_in_album: '所有歌曲均无封面',
+      },
+      'en-US': {
+        scanPathPlaceholder: 'Enter a music folder path, for example ~/Music',
+        browseFolderTitle: 'Choose a folder in Finder',
+        scanning: 'Scanning...',
+        openFolder: 'Open',
+        songCount: '{count} songs',
+        settings: 'Settings',
+        themeMode: 'Theme mode',
+        themeLight: 'Light mode',
+        themeDark: 'Night mode',
+        themeAuto: 'Follow device',
+        themeLightShort: 'Light',
+        themeDarkShort: 'Dark',
+        themeAutoShort: 'Auto',
+        language: 'Language',
+        searchPlaceholder: 'Search title / artist / album...',
+        searchPlaceholderShort: 'Search...',
+        viewFlat: 'Flat',
+        viewTree: 'Tree',
+        sortTitle: 'By title',
+        sortArtist: 'By artist',
+        sortAlbum: 'By album',
+        sortFilename: 'By filename',
+        selectAll: 'Select all',
+        unknownArtist: 'Unknown artist',
+        unknownAlbum: 'Unknown album',
+        selectedSongs: '{count} selected',
+        saveAll: 'Save all',
+        searchCover: 'Search cover',
+        syncAlbumCover: 'Sync album cover',
+        fetchLyrics: 'Fetch lyrics',
+        multipleCandidatesCount: '{count} songs have multiple candidates',
+        applying: 'Applying...',
+        applyFirstCandidate: 'Use first result',
+        autoFillTitle: 'Search iTunes and fill missing fields',
+        autoFill: 'Auto fill',
+        searching: 'Searching...',
+        pickVersionTitle: 'Choose album version',
+        pickVersion: 'Version',
+        saved: 'Saved',
+        upload: 'Upload',
+        copyFromLibrary: 'Copy from library',
+        syncToAlbum: 'Sync to album',
+        title: 'Title',
+        artist: 'Artist',
+        album: 'Album',
+        albumArtist: 'Album artist',
+        year: 'Year',
+        trackNumber: 'Track no.',
+        trackNumberPlaceholder: '1/12',
+        discNumber: 'Disc no.',
+        genre: 'Genre',
+        composer: 'Composer',
+        comment: 'Comment',
+        lyricsOriginal: 'Original',
+        lyricsTranslation: 'Translation',
+        statusPresent: '✓ Present',
+        statusMissing: '✗ Missing',
+        edit: 'Edit',
+        delete: 'Delete',
+        cancel: 'Cancel',
+        save: 'Save',
+        emptySelectSong: 'Select songs from the left panel to edit',
+        emptyOpenFolder: 'Enter a folder path in the top bar and open it',
+        search: 'Search',
+        noResults: 'No results',
+        loadingSongDetails: 'Loading song details...',
+        downloading: 'Downloading...',
+        downloadingCover: 'Downloading cover...',
+        useSelectedCover: 'Use selected cover',
+        use: 'Use',
+        withTimeline: 'Synced',
+        withTranslation: 'Translated',
+        saveOriginalLrc: 'Save original .lrc',
+        saveTranslatedLrc: 'Save translated .trans.lrc',
+        editLyrics: 'Edit lyrics',
+        pickAlbumVersion: 'Choose album version',
+        pickVersionModal: 'Choose version',
+        pickAlbumVersionHint: 'Applying will overwrite album, album artist, year, track number, disc number, and genre.',
+        pickVersionHint: 'Multiple versions were found. Pick the closest match, then click Apply.',
+        apply: 'Apply',
+        disc: 'Disc',
+        trackLabel: 'Track',
+        interfacePreferences: 'Interface',
+        neteaseCookie: 'Netease Cookie',
+        neteaseCookiePlaceholder: 'Paste the Cookie string...',
+        neteaseCookieHint: 'Open your browser → sign in to music.163.com → F12 → Network → any request → copy the Cookie value from Request Headers.',
+        coverCompression: 'Cover compression',
+        maxCoverSize: 'Max edge (px)',
+        jpegQuality: 'JPEG quality',
+        lrcSourcePriority: 'LRC source priority',
+        neteaseFirst: 'Prefer Netease',
+        lrclibFirst: 'Prefer LRCLIB',
+        itunesSearchRegions: 'iTunes regions',
+        itunesRegionsHint: 'Searching multiple regions finds more matches. JP is recommended for Japanese songs.',
+        listColumns: 'List columns',
+        saveSettings: 'Save settings',
+        column_cover_thumbnail: 'Cover thumb',
+        column_artist: 'Artist',
+        column_album: 'Album',
+        column_duration: 'Duration',
+        column_format_badge: 'Format',
+        column_lrc_badge: 'LRC',
+        country_jp: '🇯🇵 JP Japan',
+        country_us: '🇺🇸 US United States',
+        country_gb: '🇬🇧 GB United Kingdom',
+        country_kr: '🇰🇷 KR Korea',
+        country_tw: '🇹🇼 TW Taiwan',
+        country_cn: '🇨🇳 CN China',
+        unsavedChangesConfirm: 'You have unsaved changes. Switch anyway?',
+        scanComplete: 'Scan complete, {count} songs found',
+        loadFailed: 'Load failed: {message}',
+        autoFillFields: '{count} fields filled',
+        metadataComplete: 'Metadata is already complete',
+        albumFieldsUpdatedWithCover: '{count} album fields updated and cover downloaded',
+        albumFieldsUpdatedCoverFailed: 'Album fields updated, but cover download failed: {message}',
+        albumFieldsUpdatedNoCover: '{count} album fields updated (no cover)',
+        selectedVersionNoAlbumInfo: 'The selected version has no album data',
+        noMatchedResult: 'No matching result found',
+        searchFailed: 'Search failed: {message}',
+        autoFillFailed: 'Auto fill failed: {message}',
+        saveFailed: 'Save failed: {message}',
+        saveAllDone: 'All changes saved',
+        selectedCoverNeedsSave: 'Cover selected. Save to apply it.',
+        coverCopiedNeedsSave: 'Cover copied. Save to apply it.',
+        getCoverFailed: 'Failed to get cover',
+        suggestSaveCover: 'Save the current cover first',
+        noOtherSongsInAlbum: 'No other songs in this album',
+        syncAlbumCoverConfirm: 'Sync this cover to {count} other songs in the album?',
+        updatedSongsCount: '{count} songs updated',
+        lyricsSaved: 'Lyrics saved',
+        lyricsDeleted: 'Lyrics deleted',
+        deleteLyricsConfirm: 'Delete lyrics?',
+        processingSong: 'Processing: {name}',
+        coverSearchCompleteManual: 'Cover search finished. {count} songs need manual review',
+        coverSearchComplete: 'Cover search finished',
+        lyricsFetchCompleteManual: 'Lyrics fetch finished. {count} songs need manual review',
+        lyricsFetchComplete: 'Lyrics fetch finished',
+        appliedFirstLyrics: 'Applied the first result to {count} songs',
+        syncDone: 'Sync finished: {albums} albums processed, {songs} songs updated',
+        syncDoneToast: 'Sync finished, {count} songs updated',
+        settingsSaved: 'Settings saved',
+        reason_not_found: 'Not found',
+        reason_multiple_candidates: 'Multiple candidates',
+        reason_search_failed: 'Search failed',
+        reason_no_cover_in_album: 'No songs in this album had a cover',
+      },
+    }
+    const languageOptions = [
+      { value: 'zh-CN', label: '简体中文', shortLabel: '中' },
+      { value: 'en-US', label: 'English', shortLabel: 'EN' },
+    ]
+    const themeOptions = [
+      { value: 'light', labelKey: 'themeLight', shortLabelKey: 'themeLightShort', icon: '☀' },
+      { value: 'dark', labelKey: 'themeDark', shortLabelKey: 'themeDarkShort', icon: '☾' },
+      { value: 'auto', labelKey: 'themeAuto', shortLabelKey: 'themeAutoShort', icon: '💻' },
+    ]
+    const currentThemeIcon = computed(() => {
+      const matched = themeOptions.find(option => option.value === settingsData.theme_mode)
+      return matched?.icon || '💻'
+    })
+    function t(key, params = {}) {
+      const fallback = translations['zh-CN']
+      const dict = translations[currentLanguage.value] || fallback
+      let value = dict[key] ?? fallback[key] ?? key
+      return value.replace(/\{(\w+)\}/g, (_, name) => params[name] ?? '')
+    }
+    function reasonLabel(reason) {
+      return t(`reason_${reason}`)
+    }
+    function trackSummary(result) {
+      const disc = result.disc_number && result.disc_number !== '1' ? ` · ${t('disc')} ${result.disc_number}` : ''
+      return `${t('trackLabel')} ${result.track_number}${disc}`
+    }
+    function normalizeText(value) {
+      return (value || '').toString().trim().toLowerCase()
+    }
+    function albumGroupKey(song) {
+      return [
+        normalizeText(song?.album),
+        normalizeText(song?.album_artist) || normalizeText(song?.artist),
+      ].join('::')
+    }
+    function resolveTheme(themeMode) {
+      if (themeMode === 'auto') return systemThemeMedia.matches ? 'dark' : 'light'
+      return themeMode === 'light' ? 'light' : 'dark'
+    }
+    function applyThemeMode(themeMode) {
+      document.documentElement.dataset.theme = resolveTheme(themeMode)
+    }
+    function applyLanguage(language) {
+      currentLanguage.value = language
+      document.documentElement.lang = language
+    }
+
     // State
     const scanPath = ref(localStorage.getItem('scanPath') || '')
     const scanning = ref(false)
@@ -1166,8 +1826,11 @@ createApp({
     const searchQuery = ref('')
     const viewMode = ref('flat')
     const sortBy = ref('title')
+    const languageMenuOpen = ref(false)
+    const themeMenuOpen = ref(false)
     const selectedIds = ref([])
     const activeId = ref(null)
+    const detailLoading = ref(false)
     const cards = reactive({})
     const dirtySet = reactive(new Set())
     const treeOpenState = reactive(new Set())
@@ -1184,16 +1847,25 @@ createApp({
       list_display_mode: 'detailed',
       list_columns: { cover_thumbnail: false, artist: true, album: false, duration: false, format_badge: true, lrc_badge: true },
       itunes_countries: ['JP', 'US'],
+      ui_language: initialPrefs.language,
+      theme_mode: initialPrefs.themeMode,
     })
-    const columnNames = { cover_thumbnail: '封面缩略图', artist: '艺术家', album: '专辑', duration: '时长', format_badge: '格式', lrc_badge: 'LRC' }
-    const itunesCountryOptions = [
-      { code: 'JP', label: '🇯🇵 JP 日本' },
-      { code: 'US', label: '🇺🇸 US 美国' },
-      { code: 'GB', label: '🇬🇧 GB 英国' },
-      { code: 'KR', label: '🇰🇷 KR 韩国' },
-      { code: 'TW', label: '🇹🇼 TW 台湾' },
-      { code: 'CN', label: '🇨🇳 CN 中国' },
-    ]
+    const columnNames = {
+      cover_thumbnail: 'column_cover_thumbnail',
+      artist: 'column_artist',
+      album: 'column_album',
+      duration: 'column_duration',
+      format_badge: 'column_format_badge',
+      lrc_badge: 'column_lrc_badge',
+    }
+    const itunesCountryOptions = computed(() => [
+      { code: 'JP', label: t('country_jp') },
+      { code: 'US', label: t('country_us') },
+      { code: 'GB', label: t('country_gb') },
+      { code: 'KR', label: t('country_kr') },
+      { code: 'TW', label: t('country_tw') },
+      { code: 'CN', label: t('country_cn') },
+    ])
     function toggleItunesCountry(code, checked) {
       if (!Array.isArray(settingsData.itunes_countries)) settingsData.itunes_countries = []
       if (checked) {
@@ -1230,6 +1902,49 @@ createApp({
       }
       return resp.json()
     }
+    async function persistUiPreferences(patch, { silent = true } = {}) {
+      try {
+        await api('/api/settings', { method: 'PUT', body: JSON.stringify(patch) })
+      } catch (e) {
+        if (!silent) toast(e.message, 'error')
+      }
+    }
+    function changeLanguage(language, { persist = true } = {}) {
+      const nextLanguage = language === 'en-US' ? 'en-US' : 'zh-CN'
+      settingsData.ui_language = nextLanguage
+      localStorage.setItem('uiLanguage', nextLanguage)
+      applyLanguage(nextLanguage)
+      if (persist) persistUiPreferences({ ui_language: nextLanguage })
+    }
+    function changeThemeMode(themeMode, { persist = true } = {}) {
+      const nextThemeMode = ['light', 'dark', 'auto'].includes(themeMode) ? themeMode : 'auto'
+      settingsData.theme_mode = nextThemeMode
+      localStorage.setItem('themeMode', nextThemeMode)
+      applyThemeMode(nextThemeMode)
+      if (persist) persistUiPreferences({ theme_mode: nextThemeMode })
+    }
+    function toggleLanguageMenu() {
+      languageMenuOpen.value = !languageMenuOpen.value
+      if (languageMenuOpen.value) themeMenuOpen.value = false
+    }
+    function closeLanguageMenu() {
+      languageMenuOpen.value = false
+    }
+    function selectLanguageOption(language) {
+      changeLanguage(language)
+      closeLanguageMenu()
+    }
+    function toggleThemeMenu() {
+      themeMenuOpen.value = !themeMenuOpen.value
+      if (themeMenuOpen.value) languageMenuOpen.value = false
+    }
+    function closeThemeMenu() {
+      themeMenuOpen.value = false
+    }
+    function selectThemeOption(themeMode) {
+      changeThemeMode(themeMode)
+      closeThemeMenu()
+    }
 
     // Scan
     async function doScan() {
@@ -1242,7 +1957,7 @@ createApp({
         selectedIds.value = []
         Object.keys(cards).forEach(k => delete cards[k])
         dirtySet.clear()
-        toast(`扫描完成，共 ${songs.value.length} 首`)
+        toast(t('scanComplete', { count: songs.value.length }))
       } catch (e) {
         toast(e.message, 'error')
       }
@@ -1322,23 +2037,33 @@ createApp({
       loadCardsForSelected()
     }
 
-    function toggleCheck(id) {
+    async function toggleCheck(id) {
       const idx = selectedIds.value.indexOf(id)
       if (idx >= 0) selectedIds.value.splice(idx, 1)
-      else selectedIds.value.push(id)
-      loadCardIfNeeded(id)
+      else {
+        const card = await loadCardIfNeeded(id)
+        if (card) selectedIds.value.push(id)
+      }
     }
 
-    function selectSong(id, event) {
+    async function selectSong(id, event) {
       if (event && (event.target.type === 'checkbox')) return
       // Check for unsaved changes
       if (dirtySet.size > 0 && !selectedIds.value.includes(id)) {
-        if (!confirm('有未保存的修改，确定切换？')) return
+        if (!confirm(t('unsavedChangesConfirm'))) return
       }
       activeId.value = id
+      const currentSelection = [...selectedIds.value]
+      const needsLoad = !cards[id]
+      if (needsLoad) detailLoading.value = true
+      const card = await loadCardIfNeeded(id)
+      detailLoading.value = false
+      if (!card) {
+        activeId.value = currentSelection[0] || null
+        return
+      }
       selectedIds.value = [id]
       dirtySet.clear()
-      loadCardIfNeeded(id)
     }
 
     // Tree check helpers
@@ -1387,7 +2112,7 @@ createApp({
 
     // Card loading
     async function loadCardIfNeeded(id) {
-      if (cards[id]) return
+      if (cards[id]) return cards[id]
       try {
         const data = await api(`/api/songs/${id}`)
         cards[id] = { ...data, _dirty: false, _saving: false, _saved: false, _lrcContent: '', _autoFilling: false }
@@ -1398,8 +2123,10 @@ createApp({
           cards[id].has_lrc_trans = lrc.has_translated
           cards[id]._lrcContent = lrc.synced || ''
         } catch {}
+        return cards[id]
       } catch (e) {
-        toast(`加载失败: ${e.message}`, 'error')
+        toast(t('loadFailed', { message: e.message }), 'error')
+        return null
       }
     }
 
@@ -1427,8 +2154,8 @@ createApp({
       for (const f of fields) {
         if (!card[f] && r[f]) { card[f] = r[f]; filled++ }
       }
-      if (filled > 0) { markDirty(id); toast(`已补全 ${filled} 个字段`) }
-      else toast('metadata 已完整，无需补全', 'info')
+      if (filled > 0) { markDirty(id); toast(t('autoFillFields', { count: filled })) }
+      else toast(t('metadataComplete'), 'info')
     }
 
     // Apply selection from picker modal
@@ -1458,14 +2185,14 @@ createApp({
             card.cover_data = data.cover_data
             card._newCover = true
             markDirty(id)
-            toast(`已更新 ${changed} 个专辑字段并下载封面`)
+            toast(t('albumFieldsUpdatedWithCover', { count: changed }))
           } catch (e) {
-            toast(`专辑字段已更新，封面下载失败: ${e.message}`, 'error')
+            toast(t('albumFieldsUpdatedCoverFailed', { message: e.message }), 'error')
           }
           autoFillModal.applying = false
         } else {
-          if (changed > 0) toast(`已更新 ${changed} 个专辑字段（无封面）`)
-          else toast('所选版本无可用专辑信息', 'info')
+          if (changed > 0) toast(t('albumFieldsUpdatedNoCover', { count: changed }))
+          else toast(t('selectedVersionNoAlbumInfo'), 'info')
         }
       } else {
         applyAutoFillResult(id, r)
@@ -1481,14 +2208,14 @@ createApp({
       try {
         const data = await api(`/api/songs/${id}/auto-fill`)
         const results = data.results || []
-        if (!results.length) { toast('未找到匹配结果', 'info'); card._autoFilling = false; return }
+        if (!results.length) { toast(t('noMatchedResult'), 'info'); card._autoFilling = false; return }
         autoFillModal.songId = id
         autoFillModal.results = results
         autoFillModal.selectedIdx = results.length === 1 ? 0 : -1
         autoFillModal.mode = 'version'
         autoFillModal.show = true
       } catch (e) {
-        toast(`搜索失败: ${e.message}`, 'error')
+        toast(t('searchFailed', { message: e.message }), 'error')
       }
       card._autoFilling = false
     }
@@ -1503,7 +2230,7 @@ createApp({
       try {
         const data = await api(`/api/songs/${id}/auto-fill`)
         const results = data.results || []
-        if (!results.length) { toast('未找到匹配结果', 'info'); card._autoFilling = false; return }
+        if (!results.length) { toast(t('noMatchedResult'), 'info'); card._autoFilling = false; return }
 
         if (data.has_album && results[0].album_score >= 0.5) {
           // Good album match found — auto-apply without modal
@@ -1517,7 +2244,7 @@ createApp({
           autoFillModal.show = true
         }
       } catch (e) {
-        toast(`补全失败: ${e.message}`, 'error')
+        toast(t('autoFillFailed', { message: e.message }), 'error')
       }
       card._autoFilling = false
     }
@@ -1543,13 +2270,16 @@ createApp({
         // Update song list info
         const s = songs.value.find(x => x.id === id)
         if (s) {
-          s.title = card.title; s.artist = card.artist; s.album = card.album
+          s.title = card.title
+          s.artist = card.artist
+          s.album = card.album
+          s.album_artist = card.album_artist
           s.has_cover = !!card.cover_data
         }
         setTimeout(() => { if (cards[id]) cards[id]._saved = false }, 2000)
       } catch (e) {
         card._saving = false
-        toast(`保存失败: ${e.message}`, 'error')
+        toast(t('saveFailed', { message: e.message }), 'error')
       }
     }
 
@@ -1559,14 +2289,12 @@ createApp({
           await saveSong(id)
         }
       }
-      toast('全部保存完成')
+      toast(t('saveAllDone'))
     }
 
     // Cover upload
     function triggerCoverUpload(id) {
       nextTick(() => {
-        const input = document.querySelector(`input[type="file"][data-sid="${id}"]`) || document.createElement('input')
-        // Use a simpler approach
         const el = document.createElement('input')
         el.type = 'file'
         el.accept = 'image/*'
@@ -1629,7 +2357,7 @@ createApp({
           markDirty(id)
         }
         coverSearchModal.show = false
-        toast('封面已选中，请保存')
+        toast(t('selectedCoverNeedsSave'))
       } catch (e) {
         toast(e.message, 'error')
       }
@@ -1662,7 +2390,7 @@ createApp({
       if (!srcId || !dstId) return
       try {
         const resp = await fetch(`/api/songs/${srcId}/cover`)
-        if (!resp.ok) throw new Error('Failed to get cover')
+        if (!resp.ok) throw new Error(t('getCoverFailed'))
         const blob = await resp.blob()
         const reader = new FileReader()
         reader.onload = () => {
@@ -1672,7 +2400,7 @@ createApp({
             markDirty(dstId)
           }
           copyFromLibModal.show = false
-          toast('封面已复制，请保存')
+          toast(t('coverCopiedNeedsSave'))
         }
         reader.readAsDataURL(blob)
       } catch (e) {
@@ -1684,17 +2412,23 @@ createApp({
     async function syncAlbumCover(id) {
       const card = cards[id]
       if (!card) return
-      if (dirtySet.has(id)) {
-        toast('建议先保存当前封面', 'info')
+      if (card._newCover) {
+        toast(t('suggestSaveCover'), 'info')
         return
       }
-      const albumSongs = songs.value.filter(s => s.album && s.album.toLowerCase().trim() === (card.album || '').toLowerCase().trim() && s.id !== id)
-      if (!albumSongs.length) { toast('同专辑无其他歌曲', 'info'); return }
-      if (!confirm(`将当前封面同步到同专辑 ${albumSongs.length} 首歌曲？`)) return
+      const sourceSong = songs.value.find(s => s.id === id)
+      if (!sourceSong) return
+      const groupKey = albumGroupKey(sourceSong)
+      const albumSongs = songs.value.filter(s => s.id !== id && albumGroupKey(s) === groupKey)
+      if (!albumSongs.length) { toast(t('noOtherSongsInAlbum'), 'info'); return }
+      if (!confirm(t('syncAlbumCoverConfirm', { count: albumSongs.length }))) return
       try {
         const data = await api(`/api/songs/${id}/apply-album-cover`, { method: 'POST' })
-        toast(`已更新 ${data.count} 首歌曲`)
-        albumSongs.forEach(s => s.has_cover = true)
+        toast(t('updatedSongsCount', { count: data.count }))
+        const updatedIds = new Set(data.updated_ids || [])
+        songs.value.forEach(s => {
+          if (updatedIds.has(s.id)) s.has_cover = true
+        })
       } catch (e) {
         toast(e.message, 'error')
       }
@@ -1748,7 +2482,7 @@ createApp({
         const s = songs.value.find(x => x.id === id)
         if (s) { s.has_lrc = true; if (result.translated) s.has_lrc_trans = true }
         lrcSearchModal.show = false
-        toast('歌词已保存')
+        toast(t('lyricsSaved'))
       } catch (e) {
         toast(e.message, 'error')
       }
@@ -1778,18 +2512,18 @@ createApp({
           cards[id]._lrcContent = lrcEditModal.synced
         }
         lrcEditModal.show = false
-        toast('歌词已保存')
+        toast(t('lyricsSaved'))
       } catch (e) { toast(e.message, 'error') }
     }
 
     async function deleteLrc(id, type) {
-      if (!confirm('确定删除歌词？')) return
+      if (!confirm(t('deleteLyricsConfirm'))) return
       try {
         await api(`/api/songs/${id}/lrc`, { method: 'DELETE', body: JSON.stringify({ type }) })
         if (cards[id]) { cards[id].has_lrc = false; cards[id].has_lrc_trans = false; cards[id]._lrcContent = '' }
         const s = songs.value.find(x => x.id === id)
         if (s) { s.has_lrc = false; s.has_lrc_trans = false }
-        toast('歌词已删除')
+        toast(t('lyricsDeleted'))
       } catch (e) { toast(e.message, 'error') }
     }
 
@@ -1801,7 +2535,7 @@ createApp({
       let done = 0
       for (const id of ids) {
         const song = songs.value.find(s => s.id === id)
-        batchStatus.value = `正在处理：${song?.filename || id}`
+        batchStatus.value = t('processingSong', { name: song?.filename || id })
         batchPercent.value = Math.round(done / ids.length * 100)
 
         if (song?.has_cover && cards[id]?.cover_data) {
@@ -1816,18 +2550,18 @@ createApp({
             const dl = await api('/api/cover/download', { method: 'POST', body: JSON.stringify({ url: covers[0].url, source: covers[0].source }) })
             if (cards[id]) { cards[id].cover_data = dl.cover_data; cards[id]._newCover = true; markDirty(id) }
           } else if (covers.length === 0) {
-            batchReport.value.push({ id, filename: song?.filename, reason: '未找到' })
+            batchReport.value.push({ id, filename: song?.filename, reason: 'not_found' })
           } else {
-            batchReport.value.push({ id, filename: song?.filename, reason: '多个候选' })
+            batchReport.value.push({ id, filename: song?.filename, reason: 'multiple_candidates' })
           }
-        } catch { batchReport.value.push({ id, filename: song?.filename, reason: '搜索失败' }) }
+        } catch { batchReport.value.push({ id, filename: song?.filename, reason: 'search_failed' }) }
         done++
       }
       batchPercent.value = 100
-      batchStatus.value = `封面搜索完成`
+      batchStatus.value = t('coverSearchComplete')
       batchBusy.value = false
-      if (batchReport.value.length) toast(`封面搜索完成，${batchReport.value.length} 首需手动处理`, 'info')
-      else toast('封面搜索完成')
+      if (batchReport.value.length) toast(t('coverSearchCompleteManual', { count: batchReport.value.length }), 'info')
+      else toast(t('coverSearchComplete'))
     }
 
     async function batchGetLyrics() {
@@ -1837,7 +2571,7 @@ createApp({
       let done = 0
       for (const id of ids) {
         const song = songs.value.find(s => s.id === id)
-        batchStatus.value = `正在处理：${song?.filename || id}`
+        batchStatus.value = t('processingSong', { name: song?.filename || id })
         batchPercent.value = Math.round(done / ids.length * 100)
         if (song?.has_lrc) { done++; continue }
         try {
@@ -1853,23 +2587,23 @@ createApp({
             if (song) { song.has_lrc = true; if (results[0].translated) song.has_lrc_trans = true }
             if (cards[id]) { cards[id].has_lrc = true; cards[id]._lrcContent = results[0].synced || '' }
           } else if (results.length === 0) {
-            batchReport.value.push({ id, filename: song?.filename, reason: '未找到' })
+            batchReport.value.push({ id, filename: song?.filename, reason: 'not_found' })
           } else {
-            batchReport.value.push({ id, filename: song?.filename, reason: '多个候选', results })
+            batchReport.value.push({ id, filename: song?.filename, reason: 'multiple_candidates', results })
           }
-        } catch { batchReport.value.push({ id, filename: song?.filename, reason: '搜索失败' }) }
+        } catch { batchReport.value.push({ id, filename: song?.filename, reason: 'search_failed' }) }
         done++
       }
       batchPercent.value = 100
-      batchStatus.value = `歌词获取完成`
+      batchStatus.value = t('lyricsFetchComplete')
       batchBusy.value = false
-      if (batchReport.value.length) toast(`歌词获取完成，${batchReport.value.length} 首需手动处理`, 'info')
-      else toast('歌词获取完成')
+      if (batchReport.value.length) toast(t('lyricsFetchCompleteManual', { count: batchReport.value.length }), 'info')
+      else toast(t('lyricsFetchComplete'))
     }
 
     const lrcDefaultApplying = ref(false)
     async function applyDefaultLyrics() {
-      const pending = batchReport.value.filter(r => r.reason === '多个候选' && r.results?.length)
+      const pending = batchReport.value.filter(r => r.reason === 'multiple_candidates' && r.results?.length)
       if (!pending.length) return
       lrcDefaultApplying.value = true
       let applied = 0
@@ -1888,9 +2622,9 @@ createApp({
         } catch { /* skip */ }
       }
       // Remove applied entries from report
-      batchReport.value = batchReport.value.filter(r => r.reason !== '多个候选' || !r.results?.length)
+      batchReport.value = batchReport.value.filter(r => r.reason !== 'multiple_candidates' || !r.results?.length)
       lrcDefaultApplying.value = false
-      toast(`已为 ${applied} 首歌应用第一个搜索结果`)
+      toast(t('appliedFirstLyrics', { count: applied }))
     }
 
     async function batchSyncAlbumCovers() {
@@ -1900,11 +2634,11 @@ createApp({
         const data = await api('/api/batch/sync-album-covers', {
           method: 'POST', body: JSON.stringify({ song_ids: selectedIds.value })
         })
-        batchStatus.value = `同步完成：${data.albums_processed} 张专辑，${data.songs_updated} 首更新`
+        batchStatus.value = t('syncDone', { albums: data.albums_processed, songs: data.songs_updated })
         if (data.albums_skipped?.length) {
-          data.albums_skipped.forEach(a => batchReport.value.push({ filename: a, reason: '所有歌曲均无封面' }))
+          data.albums_skipped.forEach(a => batchReport.value.push({ filename: a, reason: 'no_cover_in_album' }))
         }
-        toast(`同步完成，${data.songs_updated} 首更新`)
+        toast(t('syncDoneToast', { count: data.songs_updated }))
       } catch (e) { toast(e.message, 'error') }
       batchBusy.value = false
     }
@@ -1926,6 +2660,8 @@ createApp({
         const data = await api('/api/settings')
         Object.assign(settingsData, data)
         if (data.default_scan_path && !scanPath.value) scanPath.value = data.default_scan_path
+        changeLanguage(settingsData.ui_language || initialPrefs.language, { persist: false })
+        changeThemeMode(settingsData.theme_mode || initialPrefs.themeMode, { persist: false })
       } catch {}
     }
 
@@ -1933,12 +2669,19 @@ createApp({
       try {
         await api('/api/settings', { method: 'PUT', body: JSON.stringify(settingsData) })
         showSettings.value = false
-        toast('设置已保存')
+        changeLanguage(settingsData.ui_language, { persist: false })
+        changeThemeMode(settingsData.theme_mode, { persist: false })
+        toast(t('settingsSaved'))
       } catch (e) { toast(e.message, 'error') }
     }
 
     // Keyboard navigation
     function onKeyDown(e) {
+      if (e.key === 'Escape' && (themeMenuOpen.value || languageMenuOpen.value)) {
+        closeThemeMenu()
+        closeLanguageMenu()
+        return
+      }
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
       if (viewMode.value !== 'flat') return
       const list = filteredSongs.value
@@ -1954,17 +2697,29 @@ createApp({
     }
 
     onMounted(() => {
+      applyLanguage(initialPrefs.language)
+      applyThemeMode(initialPrefs.themeMode)
       loadSettings()
       document.addEventListener('keydown', onKeyDown)
+      document.addEventListener('click', () => {
+        closeThemeMenu()
+        closeLanguageMenu()
+      })
+      const handleThemeChange = () => {
+        if (settingsData.theme_mode === 'auto') applyThemeMode('auto')
+      }
+      if (systemThemeMedia.addEventListener) systemThemeMedia.addEventListener('change', handleThemeChange)
+      else if (systemThemeMedia.addListener) systemThemeMedia.addListener(handleThemeChange)
     })
 
     return {
       scanPath, scanning, browsing, browseFolder, songs, searchQuery, viewMode, sortBy,
-      selectedIds, activeId, cards, dirtySet, treeOpenState,
+      selectedIds, activeId, detailLoading, languageMenuOpen, themeMenuOpen, cards, dirtySet, treeOpenState,
       showSettings, settingsData, columnNames, itunesCountryOptions, toggleItunesCountry, toasts,
       batchBusy, batchStatus, batchPercent, batchReport,
       coverSearchModal, copyFromLibModal, lrcSearchModal, lrcEditModal, autoFillModal,
       filteredSongs, treeData, allChecked, copyFromLibFiltered,
+      languageOptions, themeOptions, currentThemeIcon, t, reasonLabel, trackSummary, changeLanguage, changeThemeMode, toggleLanguageMenu, selectLanguageOption, toggleThemeMenu, selectThemeOption,
       doScan, onSearch, selectSong, toggleCheck, toggleAll,
       isActive, isChecked, isCardDirty, getCard, markDirty,
       isTreeOpen, toggleTreeNode,

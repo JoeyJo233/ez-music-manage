@@ -23,6 +23,8 @@ class SettingsModel(BaseModel):
         "format_badge": True,
         "lrc_badge": True,
     }
+    ui_language: str = "zh-CN"
+    theme_mode: str = "auto"
 
 
 @router.get("/settings")

@@ -14,6 +14,16 @@ from services.scanner import library
 router = APIRouter(prefix="/api", tags=["cover"])
 
 
+def _normalize(value: str) -> str:
+    return (value or "").strip().lower()
+
+
+def _album_group_key(song) -> tuple[str, str]:
+    album = _normalize(song.album)
+    owner = _normalize(song.album_artist) or _normalize(song.artist)
+    return album, owner
+
+
 @router.get("/cover/search")
 async def search_cover(artist: str = "", album: str = ""):
     from services.settings import load_settings
@@ -51,7 +61,7 @@ async def apply_album_cover(song_id: str):
     if not cover_data:
         raise HTTPException(status_code=400, detail="Current song has no cover")
 
-    album_name = song.album.strip().lower()
+    album_name, album_owner = _album_group_key(song)
     if not album_name:
         raise HTTPException(status_code=400, detail="Current song has no album name")
 
@@ -59,10 +69,11 @@ async def apply_album_cover(song_id: str):
     settings = load_settings()
 
     updated = []
+    updated_ids = []
     for s in library.songs.values():
         if s.id == song_id:
             continue
-        if s.album.strip().lower() == album_name:
+        if _album_group_key(s) == (album_name, album_owner):
             try:
                 set_cover_only(
                     s.file_path, cover_data,
@@ -71,10 +82,11 @@ async def apply_album_cover(song_id: str):
                 )
                 s.has_cover = True
                 updated.append(s.filename)
+                updated_ids.append(s.id)
             except Exception:
                 continue
 
-    return {"updated": updated, "count": len(updated)}
+    return {"updated": updated, "updated_ids": updated_ids, "count": len(updated)}
 
 
 @router.get("/cover/library")

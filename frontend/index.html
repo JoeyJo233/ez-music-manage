@@ -3,169 +3,756 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>音乐 Metadata 管理</title>
+<title>EZ Music Manage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --bg: #1a1a2e;
-  --bg2: #16213e;
-  --bg3: #0f3460;
-  --surface: #1e2746;
-  --surface2: #253256;
-  --text: #e0e0e0;
-  --text2: #9ca3af;
-  --accent: #4f8cff;
-  --accent2: #38bdf8;
-  --green: #34d399;
-  --red: #f87171;
-  --orange: #fbbf24;
-  --border: #2d3a5c;
-  --radius: 8px;
-}
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
-input, textarea, select, button { font-family: inherit; font-size: 13px; }
-input, textarea { background: var(--bg2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 5px 8px; outline: none; transition: border .2s; }
-input:focus, textarea:focus { border-color: var(--accent); }
-button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; font-size: 13px; transition: all .15s; }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: #3b7aef; }
-.btn-secondary { background: var(--surface2); color: var(--text); }
-.btn-secondary:hover { background: var(--bg3); }
-.btn-sm { padding: 4px 10px; font-size: 12px; }
-.btn-danger { background: var(--red); color: #fff; }
-.btn-danger:hover { opacity: .85; }
-.btn-success { background: var(--green); color: #1a1a2e; }
+/* ═══════════════════════════════════════════
+   EZ Music Manage — Glassmorphism UI
+   Design: Luxury minimal, frosted glass
+   ═══════════════════════════════════════════ */
 
-/* Layout */
-#app { display: flex; flex-direction: column; height: 100vh; }
-.topbar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  /* Deep dark base */
+  --bg: #07071a;
+
+  /* Glass layers */
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-hover: rgba(255, 255, 255, 0.06);
+  --glass-active: rgba(255, 255, 255, 0.09);
+  --glass-elevated: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-border-hover: rgba(255, 255, 255, 0.14);
+
+  /* Typography */
+  --text: #f0f0f8;
+  --text2: rgba(255, 255, 255, 0.48);
+  --text3: rgba(255, 255, 255, 0.28);
+
+  /* Accent */
+  --accent: #8b7cf8;
+  --accent-dim: rgba(139, 124, 248, 0.14);
+  --accent-glow: rgba(139, 124, 248, 0.25);
+  --accent2: #c4b5fd;
+
+  /* Status */
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.12);
+  --red: #fb7185;
+  --red-dim: rgba(251, 113, 133, 0.12);
+  --orange: #fbbf24;
+  --orange-dim: rgba(251, 191, 36, 0.12);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96, 165, 250, 0.12);
+
+  /* Spacing & Shape */
+  --border: rgba(255, 255, 255, 0.05);
+  --radius: 10px;
+  --radius-lg: 16px;
+  --blur: 24px;
+  --blur-heavy: 40px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Elevation */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Ambient gradient orbs for depth ── */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(150px);
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.7;
+}
+body::before {
+  width: 700px;
+  height: 700px;
+  top: -280px;
+  right: -150px;
+  background: radial-gradient(circle, rgba(139, 124, 248, 0.18), transparent 70%);
+}
+body::after {
+  width: 550px;
+  height: 550px;
+  bottom: -200px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.10), transparent 70%);
+}
+
+/* ── Base form elements ── */
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: 13px;
+}
+input, textarea {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  outline: none;
+  transition: var(--transition);
+}
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: rgba(255, 255, 255, 0.06);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--text3);
+}
+select {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+select:hover { border-color: var(--glass-border-hover); }
+
+/* ── Buttons ── */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: var(--transition);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #a78bfa);
+  color: #fff;
+  box-shadow: 0 2px 12px var(--accent-dim);
+}
+.btn-primary:hover {
+  box-shadow: 0 4px 20px var(--accent-glow);
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  background: var(--glass-hover);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+}
+.btn-secondary:hover {
+  background: var(--glass-active);
+  border-color: var(--glass-border-hover);
+}
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid rgba(251, 113, 133, 0.18);
+}
+.btn-danger:hover { background: rgba(251, 113, 133, 0.18); }
+.btn-success {
+  background: linear-gradient(135deg, #34d399, #4ade80);
+  color: #07071a;
+  font-weight: 600;
+}
+.btn-success:hover {
+  box-shadow: 0 4px 20px var(--green-dim);
+  transform: translateY(-1px);
+}
+
+/* ── Layout ── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Topbar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
 .topbar input { flex: 1; }
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.app-brand-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+.app-brand-name {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
+.song-count-badge {
+  font-size: 11px;
+  color: var(--text2);
+  background: var(--glass-hover);
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .main { display: flex; flex: 1; overflow: hidden; }
 
-/* Left panel */
-.left-panel { width: 320px; min-width: 320px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg2); }
-.left-header { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
-.left-controls { display: flex; gap: 6px; align-items: center; }
-.left-controls select { background: var(--bg2); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; font-size: 12px; }
+/* ── Left panel ── */
+.left-panel {
+  width: 340px;
+  min-width: 340px;
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+}
+.left-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.left-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.left-controls select { font-size: 12px; }
 .search-box { width: 100%; }
-.select-all { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); padding: 4px 0; }
-.song-list { flex: 1; overflow-y: auto; }
-.song-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer; border-bottom: 1px solid rgba(45,58,92,.4); transition: background .1s; }
-.song-item:hover { background: var(--surface); }
-.song-item.active { background: var(--surface2); }
-.song-item.checked { background: rgba(79,140,255,.1); }
-.song-item input[type="checkbox"] { flex-shrink: 0; accent-color: var(--accent); }
+.select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text2);
+  padding: 4px 0;
+  margin-left: auto;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Song list ── */
+.song-list { flex: 1; overflow-y: auto; padding: 4px; }
+.song-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: none;
+  transition: var(--transition);
+  border-radius: 8px;
+  margin-bottom: 1px;
+}
+.song-item:hover { background: var(--glass-hover); }
+.song-item.active {
+  background: var(--glass-active);
+  box-shadow: inset 0 0 0 1px var(--glass-border-hover);
+}
+.song-item.checked { background: var(--accent-dim); }
+.song-item input[type="checkbox"] {
+  flex-shrink: 0;
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
 .song-info { flex: 1; min-width: 0; }
-.song-title { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.song-artist { font-size: 11px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.song-title {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+.song-artist {
+  font-size: 11px;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
 .song-badges { display: flex; gap: 4px; flex-shrink: 0; }
-.badge { font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
-.badge-flac { background: #7c3aed33; color: #a78bfa; }
-.badge-aac { background: #f59e0b33; color: #fbbf24; }
-.badge-lrc { background: #3b82f633; color: #60a5fa; }
-.badge-lrc-none { background: #37415133; color: #6b7280; }
+.badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.badge-flac { background: rgba(139, 124, 248, 0.15); color: #a78bfa; }
+.badge-aac { background: rgba(251, 191, 36, 0.13); color: #fbbf24; }
+.badge-lrc { background: var(--blue-dim); color: var(--blue); }
+.badge-lrc-none { background: rgba(255, 255, 255, 0.03); color: rgba(255, 255, 255, 0.18); }
 
-/* Right panel */
+/* ── Right panel ── */
 .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.toolbar { padding: 10px 16px; background: var(--bg2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.toolbar {
+  padding: 12px 20px;
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
 .toolbar-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.toolbar-count { font-size: 13px; color: var(--text2); margin-right: auto; }
-.toolbar-progress { margin-top: 8px; font-size: 12px; color: var(--text2); }
-.toolbar-progress .bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 4px; overflow: hidden; }
-.toolbar-progress .bar-fill { height: 100%; background: var(--accent); transition: width .3s; }
-.card-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-.empty-state { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text2); font-size: 15px; }
+.toolbar-count {
+  font-size: 13px;
+  color: var(--text2);
+  margin-right: auto;
+  font-weight: 500;
+}
+.toolbar-progress { margin-top: 10px; font-size: 12px; color: var(--text2); }
+.toolbar-progress .bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.toolbar-progress .bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 0.3s;
+  border-radius: 2px;
+}
+.card-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+}
+.empty-state-icon {
+  font-size: 48px;
+  opacity: 0.15;
+  line-height: 1;
+}
+.empty-state-text {
+  color: var(--text3);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
 
-/* Song card */
-.song-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; }
-.song-card.dirty { border-color: var(--orange); }
-.card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.card-filename { font-size: 14px; font-weight: 600; color: var(--accent2); }
+/* ── Song card (glass) ── */
+.song-card {
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.song-card:hover { border-color: var(--glass-border-hover); }
+.song-card.dirty {
+  border-color: rgba(251, 191, 36, 0.28);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.08), var(--shadow-sm);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.card-filename {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent2);
+  letter-spacing: -0.01em;
+}
 .card-save-status { margin-left: auto; font-size: 12px; }
-.card-body { display: flex; gap: 16px; }
-.cover-area { flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.cover-img { width: 180px; height: 180px; border-radius: 6px; object-fit: cover; background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border); }
+.card-body { display: flex; gap: 22px; }
+
+/* ── Cover art ── */
+.cover-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+.cover-img {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+.cover-img:hover {
+  border-color: var(--glass-border-hover);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
 .cover-img img { width: 100%; height: 100%; object-fit: cover; }
-.cover-placeholder { width: 180px; height: 180px; border-radius: 6px; background: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--text2); font-size: 40px; cursor: pointer; border: 1px dashed var(--border); }
-.cover-btns { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
-.fields-area { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.field { display: flex; flex-direction: column; gap: 2px; }
-.field label { font-size: 11px; color: var(--text2); }
+.cover-placeholder {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3);
+  font-size: 40px;
+  cursor: pointer;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  transition: var(--transition);
+}
+.cover-placeholder:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.cover-btns { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+
+/* ── Fields grid ── */
+.fields-area {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label {
+  font-size: 11px;
+  color: var(--text2);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 .field input, .field textarea { width: 100%; }
 .field-full { grid-column: 1 / -1; }
 .field-third { }
 
-/* LRC section */
-.lrc-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+/* ── LRC section ── */
+.lrc-section {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
 .lrc-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.lrc-status { font-size: 12px; }
+.lrc-status { font-size: 12px; font-weight: 500; }
 .lrc-status .has { color: var(--green); }
-.lrc-status .no { color: var(--text2); }
-.lrc-preview { font-size: 12px; color: var(--text2); white-space: pre-line; max-height: 100px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 4px; margin-top: 6px; }
-.card-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.lrc-status .no { color: var(--text3); }
+.lrc-preview {
+  font-size: 12px;
+  color: var(--text2);
+  white-space: pre-line;
+  max-height: 100px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-top: 6px;
+  border: 1px solid var(--border);
+  line-height: 1.6;
+}
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
 
-/* Modal / overlay */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; }
-.modal h3 { margin-bottom: 12px; font-size: 16px; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+/* ── Modal (glass overlay) ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* Cover search results */
-.cover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
-.cover-candidate { cursor: pointer; border: 2px solid transparent; border-radius: 6px; overflow: hidden; transition: border .15s; position: relative; }
-.cover-candidate:hover { border-color: var(--accent); }
-.cover-candidate.selected { border-color: var(--green); }
+.modal {
+  background: rgba(18, 18, 42, 0.88);
+  backdrop-filter: blur(var(--blur-heavy));
+  -webkit-backdrop-filter: blur(var(--blur-heavy));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: modalIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal h3 {
+  margin-bottom: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* ── Cover search results ── */
+.cover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.cover-candidate {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: var(--transition);
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+}
+.cover-candidate:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(139, 124, 248, 0.15);
+}
+.cover-candidate.selected {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px var(--green-dim);
+}
 .cover-candidate img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
-.cover-candidate .source-tag { position: absolute; top: 4px; right: 4px; font-size: 9px; padding: 1px 4px; border-radius: 3px; background: rgba(0,0,0,.7); color: #fff; }
-.cover-candidate .album-name { font-size: 10px; padding: 4px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cover-candidate .source-tag {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font-weight: 500;
+}
+.cover-candidate .album-name {
+  font-size: 10px;
+  padding: 6px 8px;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-/* Lyrics search results */
-.lyric-candidate { padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; cursor: pointer; }
-.lyric-candidate:hover { border-color: var(--accent); }
-.lyric-candidate.selected { border-color: var(--green); background: rgba(52,211,153,.05); }
+/* ── Lyrics search results ── */
+.lyric-candidate {
+  padding: 12px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--glass);
+}
+.lyric-candidate:hover {
+  border-color: var(--glass-border-hover);
+  background: var(--glass-hover);
+}
+.lyric-candidate.selected {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
 .lyric-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; font-size: 12px; }
-.lyric-preview-text { font-size: 11px; color: var(--text2); white-space: pre-line; max-height: 60px; overflow: hidden; }
+.lyric-preview-text {
+  font-size: 11px;
+  color: var(--text2);
+  white-space: pre-line;
+  max-height: 60px;
+  overflow: hidden;
+  line-height: 1.5;
+}
 
-/* Settings panel */
-.settings-group { margin-bottom: 16px; }
-.settings-group h4 { font-size: 13px; margin-bottom: 8px; color: var(--accent2); }
-.settings-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+/* ── Settings ── */
+.settings-group { margin-bottom: 20px; }
+.settings-group h4 {
+  font-size: 12px;
+  margin-bottom: 10px;
+  color: var(--accent2);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
 .settings-row label { font-size: 12px; min-width: 100px; color: var(--text2); }
 .settings-row input, .settings-row select { flex: 1; }
 .settings-row textarea { flex: 1; min-height: 60px; }
-.settings-hint { font-size: 11px; color: var(--text2); margin-top: 4px; line-height: 1.5; }
+.settings-hint {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 6px;
+  line-height: 1.6;
+}
 
-/* Report */
-.report { background: var(--bg); border-radius: 6px; padding: 10px; margin-top: 8px; font-size: 12px; max-height: 200px; overflow-y: auto; }
-.report-line { padding: 2px 0; }
-.report-line a { color: var(--accent); cursor: pointer; text-decoration: underline; }
+/* ── Report ── */
+.report {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-top: 10px;
+  font-size: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.report-line { padding: 3px 0; }
+.report-line a {
+  color: var(--accent2);
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--transition);
+}
+.report-line a:hover { color: var(--accent); text-decoration: underline; }
 
-/* Tree view */
+/* ── Tree view ── */
 .tree-node { }
-.tree-header { display: flex; align-items: center; gap: 6px; padding: 4px 12px; cursor: pointer; font-size: 13px; color: var(--text2); border-bottom: 1px solid rgba(45,58,92,.3); }
-.tree-header:hover { background: var(--surface); }
-.tree-arrow { font-size: 10px; width: 16px; transition: transform .15s; }
+.tree-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: var(--transition);
+}
+.tree-header:hover { background: var(--glass-hover); }
+.tree-arrow {
+  font-size: 10px;
+  width: 16px;
+  transition: transform 0.2s ease;
+  color: var(--text3);
+}
 .tree-arrow.open { transform: rotate(90deg); }
 .tree-children { padding-left: 16px; }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--surface2); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.07); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.14); }
 
-/* Toast */
-.toast-container { position: fixed; top: 16px; right: 16px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
-.toast { padding: 10px 16px; border-radius: 6px; font-size: 13px; color: #fff; animation: slideIn .3s; }
-.toast-success { background: #059669; }
-.toast-error { background: #dc2626; }
-.toast-info { background: #2563eb; }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+/* ── Toast ── */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-md);
+  animation: toastIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.toast-success { background: rgba(16, 185, 129, 0.82); border: 1px solid rgba(52, 211, 153, 0.25); }
+.toast-error { background: rgba(220, 38, 38, 0.82); border: 1px solid rgba(248, 113, 113, 0.25); }
+.toast-info { background: rgba(99, 102, 241, 0.82); border: 1px solid rgba(139, 124, 248, 0.25); }
+@keyframes toastIn {
+  from { transform: translateX(100%) scale(0.95); opacity: 0; }
+  to { transform: translateX(0) scale(1); opacity: 1; }
+}
 
-/* Loading */
-.loading { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
+/* ── Loading spinner ── */
+.loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Selection ── */
+::selection { background: var(--accent-dim); color: var(--text); }
 </style>
 </head>
 <body>
@@ -177,17 +764,20 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
 
   <!-- Top bar -->
   <div class="topbar">
-    <span style="font-size:18px;margin-right:4px">🎵</span>
-    <input v-model="scanPath" @keydown.enter="doScan" placeholder="输入音乐文件夹路径，如 ~/Music" style="font-size:14px;padding:8px 12px;">
-    <button class="btn-secondary" @click="browseFolder" :disabled="browsing" title="在 Finder 中选择文件夹" style="padding:8px 10px;font-size:14px">
+    <div class="app-brand">
+      <span class="app-brand-icon">🎵</span>
+      <span class="app-brand-name">EZ Music</span>
+    </div>
+    <input v-model="scanPath" @keydown.enter="doScan" placeholder="输入音乐文件夹路径，如 ~/Music" style="font-size:13px;padding:8px 14px;">
+    <button class="btn-secondary" @click="browseFolder" :disabled="browsing" title="在 Finder 中选择文件夹" style="padding:8px 12px;font-size:13px">
       {{ browsing ? '...' : '📂' }}
     </button>
     <button class="btn-primary" @click="doScan" :disabled="scanning">
       <span v-if="scanning" class="loading" style="vertical-align:middle;margin-right:4px"></span>
       {{ scanning ? '扫描中...' : '打开' }}
     </button>
-    <span v-if="songs.length" style="font-size:12px;color:var(--text2)">{{ songs.length }} 首</span>
-    <button class="btn-secondary" @click="showSettings=true" style="font-size:16px;padding:6px 10px">⚙</button>
+    <span v-if="songs.length" class="song-count-badge">{{ songs.length }} 首</span>
+    <button class="btn-secondary" @click="showSettings=true" style="font-size:15px;padding:6px 12px" title="设置">⚙</button>
   </div>
 
   <!-- Main layout -->
@@ -195,7 +785,7 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
     <!-- Left panel -->
     <div class="left-panel">
       <div class="left-header">
-        <input class="search-box" v-model="searchQuery" placeholder="🔍 搜索标题 / 艺术家 / 专辑" @input="onSearch">
+        <input class="search-box" v-model="searchQuery" placeholder="搜索标题 / 艺术家 / 专辑..." @input="onSearch">
         <div class="left-controls">
           <select v-model="viewMode" style="width:80px">
             <option value="flat">平铺</option>
@@ -273,10 +863,10 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
       <div class="toolbar" v-if="selectedIds.length">
         <div class="toolbar-row">
           <span class="toolbar-count">已选 {{ selectedIds.length }} 首</span>
-          <button class="btn-primary btn-sm" @click="saveAll" :disabled="batchBusy">💾 全部保存</button>
-          <button class="btn-secondary btn-sm" @click="batchSearchCovers" :disabled="batchBusy">🖼 搜索封面</button>
-          <button class="btn-secondary btn-sm" @click="batchSyncAlbumCovers" :disabled="batchBusy">⚡ 同步专辑封面</button>
-          <button class="btn-secondary btn-sm" @click="batchGetLyrics" :disabled="batchBusy">🎵 获取歌词</button>
+          <button class="btn-primary btn-sm" @click="saveAll" :disabled="batchBusy">全部保存</button>
+          <button class="btn-secondary btn-sm" @click="batchSearchCovers" :disabled="batchBusy">搜索封面</button>
+          <button class="btn-secondary btn-sm" @click="batchSyncAlbumCovers" :disabled="batchBusy">同步专辑封面</button>
+          <button class="btn-secondary btn-sm" @click="batchGetLyrics" :disabled="batchBusy">获取歌词</button>
         </div>
         <div class="toolbar-progress" v-if="batchBusy">
           <span>{{ batchStatus }}</span>
@@ -287,7 +877,7 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
             <span style="font-size:12px;color:var(--text2)">{{ batchReport.filter(r=>r.reason==='多个候选').length }} 首有多个候选</span>
             <button class="btn-secondary btn-sm" @click="applyDefaultLyrics" :disabled="lrcDefaultApplying">
               <span v-if="lrcDefaultApplying" class="loading" style="vertical-align:middle;margin-right:4px"></span>
-              {{ lrcDefaultApplying ? '应用中...' : '选择默认（全部取第一个）' }}
+              {{ lrcDefaultApplying ? '应用中...' : '全部取第一个' }}
             </button>
           </div>
           <div class="report-line" v-for="(r, i) in batchReport" :key="i">
@@ -303,28 +893,28 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
         <div v-for="sid in selectedIds" :key="sid" :class="['song-card', {dirty: isCardDirty(sid)}]">
           <div class="card-header">
             <span class="card-filename">{{ getCard(sid)?.filename }}</span>
-            <button class="btn-secondary btn-sm" @click="autoFillMetadata(sid)" :disabled="getCard(sid)?._autoFilling" style="margin-left:auto;font-size:11px" title="搜索 iTunes 并填入缺失字段（不覆盖已有内容）">
-              {{ getCard(sid)?._autoFilling ? '搜索中...' : '🔍 联网补全' }}
+            <button class="btn-secondary btn-sm" @click="autoFillMetadata(sid)" :disabled="getCard(sid)?._autoFilling" style="margin-left:auto;font-size:11px" title="搜索 iTunes 并填入缺失字段">
+              {{ getCard(sid)?._autoFilling ? '搜索中...' : '联网补全' }}
             </button>
-            <button class="btn-secondary btn-sm" @click="openVersionPicker(sid)" :disabled="getCard(sid)?._autoFilling" style="font-size:11px" title="选择专辑版本，覆盖写入专辑相关字段">
-              💿 选版本
+            <button class="btn-secondary btn-sm" @click="openVersionPicker(sid)" :disabled="getCard(sid)?._autoFilling" style="font-size:11px" title="选择专辑版本">
+              选版本
             </button>
             <span class="card-save-status" style="margin-left:8px" v-if="getCard(sid)?._saving"><span class="loading"></span></span>
-            <span class="card-save-status" style="margin-left:8px;color:var(--green)" v-else-if="getCard(sid)?._saved">✓ 已保存</span>
+            <span class="card-save-status" style="margin-left:8px;color:var(--green)" v-else-if="getCard(sid)?._saved">已保存</span>
           </div>
           <div class="card-body">
             <div class="cover-area">
               <div v-if="getCard(sid)?.cover_data" class="cover-img" @click="triggerCoverUpload(sid)">
                 <img :src="getCard(sid).cover_data">
               </div>
-              <div v-else class="cover-placeholder" @click="triggerCoverUpload(sid)">🎵</div>
+              <div v-else class="cover-placeholder" @click="triggerCoverUpload(sid)">♪</div>
               <input type="file" :ref="'coverInput'+sid" accept="image/*" style="display:none" @change="onCoverUpload(sid, $event)">
               <div class="cover-btns">
                 <button class="btn-secondary btn-sm" @click="triggerCoverUpload(sid)">上传</button>
                 <button class="btn-secondary btn-sm" @click="openCoverSearch(sid)">搜索封面</button>
                 <button class="btn-secondary btn-sm" @click="openCopyFromLib(sid)">从库复制</button>
               </div>
-              <button class="btn-secondary btn-sm" style="font-size:11px" @click="syncAlbumCover(sid)">⚡ 同步到整张专辑</button>
+              <button class="btn-secondary btn-sm" style="font-size:11px" @click="syncAlbumCover(sid)">同步到整张专辑</button>
             </div>
             <div class="fields-area">
               <div class="field"><label>标题</label><input v-model="getCard(sid).title" @input="markDirty(sid)"></div>
@@ -353,13 +943,14 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
           <div class="card-footer">
             <button class="btn-secondary" @click="cancelCard(sid)" v-if="isCardDirty(sid)">取消</button>
             <button :class="isCardDirty(sid)?'btn-success':'btn-secondary'" @click="saveSong(sid)">
-              💾 保存
+              保存
             </button>
           </div>
         </div>
       </div>
       <div class="empty-state" v-else>
-        {{ songs.length ? '← 从左栏选择歌曲进行编辑' : '请在顶栏输入文件夹路径并点击「打开」' }}
+        <div class="empty-state-icon">♪</div>
+        <div class="empty-state-text">{{ songs.length ? '从左栏选择歌曲进行编辑' : '在顶栏输入文件夹路径并打开' }}</div>
       </div>
     </div>
   </div>
@@ -456,9 +1047,9 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
     <div class="modal">
       <h3>编辑歌词</h3>
       <div style="margin-bottom:8px;font-size:12px;color:var(--text2)">原文 .lrc</div>
-      <textarea v-model="lrcEditModal.synced" rows="12" style="width:100%;font-family:monospace;font-size:12px"></textarea>
+      <textarea v-model="lrcEditModal.synced" rows="12" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:12px"></textarea>
       <div style="margin:8px 0;font-size:12px;color:var(--text2)">译文 .trans.lrc</div>
-      <textarea v-model="lrcEditModal.translated" rows="8" style="width:100%;font-family:monospace;font-size:12px"></textarea>
+      <textarea v-model="lrcEditModal.translated" rows="8" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:12px"></textarea>
       <div class="modal-actions">
         <button class="btn-secondary" @click="lrcEditModal.show=false">取消</button>
         <button class="btn-primary" @click="saveLrcEdit">保存</button>
@@ -470,7 +1061,7 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
   <div class="modal-overlay" v-if="autoFillModal.show" @click.self="autoFillModal.show=false">
     <div class="modal" style="max-width:580px">
       <h3>{{ autoFillModal.mode==='version' ? '选择专辑版本' : '选择版本' }}</h3>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px">
         {{ autoFillModal.mode==='version'
           ? '选择后将覆盖写入：专辑、专辑艺术家、年份、曲目编号、碟号、流派'
           : '找到多个版本，请选择最符合的一个后点「应用」' }}
@@ -479,15 +1070,15 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
         <div v-for="(r, i) in autoFillModal.results" :key="i"
              :class="['lyric-candidate', {selected: autoFillModal.selectedIdx===i}]"
              @click="autoFillModal.selectedIdx=i">
-          <div style="display:flex;gap:10px;align-items:center">
-            <div style="flex-shrink:0;width:56px;height:56px;border-radius:4px;overflow:hidden;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center">
+          <div style="display:flex;gap:12px;align-items:center">
+            <div style="flex-shrink:0;width:56px;height:56px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center">
               <img v-if="r.artwork_url" :src="r.artwork_url" style="width:100%;height:100%;object-fit:cover" loading="lazy">
-              <span v-else style="font-size:22px">🎵</span>
+              <span v-else style="font-size:22px;color:var(--text3)">♪</span>
             </div>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:6px">
                 <span style="font-size:13px;font-weight:600">{{ r.title }}</span>
-                <span class="badge" style="background:rgba(79,140,255,.2);color:var(--accent);font-size:9px">{{ r.store }}</span>
+                <span class="badge" style="background:var(--accent-dim);color:var(--accent);font-size:9px">{{ r.store }}</span>
               </div>
               <div style="font-size:12px;color:var(--text2);margin-top:2px">{{ r.artist }}</div>
               <div style="font-size:12px;color:var(--accent2);margin-top:2px">{{ r.album }}</div>
@@ -513,7 +1104,7 @@ button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 14px; f
   <!-- Settings modal -->
   <div class="modal-overlay" v-if="showSettings" @click.self="showSettings=false">
     <div class="modal" style="max-width:550px">
-      <h3>⚙ 设置</h3>
+      <h3>设置</h3>
       <div class="settings-group">
         <h4>网易云 Cookie</h4>
         <textarea v-model="settingsData.netease_cookie" rows="3" style="width:100%;font-size:11px" placeholder="粘贴 Cookie 字符串..."></textarea>
@@ -903,8 +1494,8 @@ createApp({
     }
 
     // Auto-fill missing metadata from iTunes
-    // • has album → server sorts by album similarity, auto-pick best if score ≥ 0.5
-    // • no album (or weak match) → show version picker modal
+    // has album -> server sorts by album similarity, auto-pick best if score >= 0.5
+    // no album (or weak match) -> show version picker modal
     async function autoFillMetadata(id) {
       const card = cards[id]
       if (!card) return

@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from routers import library, songs, cover, lrc, batch, settings
 
 app = FastAPI(title="Music Tag App", version="0.1.0")
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
 app.include_router(library.router)
 app.include_router(songs.router)

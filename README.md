@@ -44,6 +44,12 @@ uv sync
 uv run uvicorn main:app --reload --port 8765
 ```
 
+Or use the packaging-friendly launcher that starts the local server and opens the browser automatically:
+
+```bash
+uv run python launcher.py
+```
+
 ### 4. Open in browser
 
 Visit [http://localhost:8765](http://localhost:8765)
@@ -107,8 +113,18 @@ Provides full access to Netease lyrics and cover art search:
 | Image processing | Pillow |
 | HTTP client | httpx |
 | Netease API | pyncm |
-| Frontend framework | Vue 3 (CDN) |
+| Frontend framework | Vue 3 |
 | Package manager | uv |
+
+## macOS Packaging
+
+For macOS packaging, use the desktop launcher and the bundled PyInstaller spec:
+
+```bash
+uvx pyinstaller ez_music_manage.spec
+```
+
+This produces a macOS `.app` in `dist/`, which can be wrapped into a `.dmg` in the next step.
 
 ---
 
@@ -152,6 +168,12 @@ uv sync
 
 ```bash
 uv run uvicorn main:app --reload --port 8765
+```
+
+也可以使用更接近桌面应用形态的启动入口，它会启动本地服务并自动打开浏览器：
+
+```bash
+uv run python launcher.py
 ```
 
 ### 4. 打开浏览器
@@ -217,5 +239,15 @@ uv run uvicorn main:app --reload --port 8765
 | 图片处理 | Pillow |
 | HTTP 客户端 | httpx |
 | 网易云 API | pyncm |
-| 前端框架 | Vue 3 (CDN) |
+| 前端框架 | Vue 3 |
 | 包管理 | uv |
+
+## macOS 打包
+
+如果要做 macOS 应用打包，使用桌面启动入口和仓库内的 PyInstaller 配置：
+
+```bash
+uvx pyinstaller ez_music_manage.spec
+```
+
+这一步会先在 `dist/` 下产出 `.app`，后续再把这个 `.app` 包成 `.dmg`。

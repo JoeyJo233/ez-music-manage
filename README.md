@@ -1,4 +1,118 @@
-# 🎵 音乐 Metadata 管理 Web App
+# ez-music-manage
+
+A self-hosted web app for managing local music file metadata — edit tags, fetch cover art and lyrics, batch operations. Supports FLAC and AAC (M4A) formats.
+
+[中文文档](#中文文档)
+
+---
+
+## Features
+
+- **Recursive directory scan**: auto-discovers all `.flac` / `.m4a` / `.aac` files
+- **Metadata editing**: title, artist, album, year, track number, genre, composer, comment, and more
+- **Cover art management**: local upload, online search via iTunes + Netease, copy from library, one-click sync to entire album
+- **LRC lyrics management**: dual-source search (LRCLIB + Netease), separate original/translated lyrics, manual editing
+- **Batch operations**: multi-select songs, then batch-fetch covers, lyrics, or sync album art
+- **Dual view modes**: flat list / artist→album tree grouping
+- **Search & filter**: instant filter by title, artist, or album
+- **Dark theme UI**: single-page design, no page navigation
+
+## Requirements
+
+- Python >= 3.10
+- [uv](https://docs.astral.sh/uv/) package manager
+
+## Quick Start
+
+### 1. Install uv (if not already installed)
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### 2. Clone and install dependencies
+
+```bash
+git clone https://github.com/JoeyJo233/ez-music-manage.git
+cd ez-music-manage
+uv sync
+```
+
+### 3. Start the app
+
+```bash
+uv run uvicorn main:app --reload --port 8765
+```
+
+### 4. Open in browser
+
+Visit [http://localhost:8765](http://localhost:8765)
+
+## Usage
+
+1. **Open folder**: enter your music directory path in the top bar (e.g. `~/Music/my_music`) and click "Open"
+2. **Select songs**: click a song name to select it, or use checkboxes for multi-select
+3. **Edit metadata**: modify fields in the right panel and click "Save" to write to file
+4. **Manage cover art**:
+   - Click the cover area to upload a local image
+   - Click "Search Cover" to search iTunes / Netease online
+   - Click "Copy from Library" to copy cover art from another song
+   - Click "⚡ Sync to Album" to write the cover to all songs in the same album
+5. **Manage lyrics**:
+   - Click "Fetch Lyrics" to search LRCLIB / Netease for LRC lyrics
+   - Lyrics are saved as `.lrc` (original) and `.trans.lrc` (translation)
+6. **Batch operations**: select multiple songs and use the toolbar batch buttons
+7. **Settings**: click ⚙ in the top-right to configure Netease Cookie, cover compression settings, etc.
+
+## Netease Cookie (Optional)
+
+Provides full access to Netease lyrics and cover art search:
+
+1. Open [music.163.com](https://music.163.com) and log in
+2. Open DevTools (F12) → Network tab
+3. Click anywhere on the page to trigger a request
+4. Copy the `Cookie` header value from that request
+5. Paste it into the "Netease Cookie" field in the app settings panel
+
+## Project Structure
+
+```
+.
+├── main.py                 # FastAPI entry point
+├── pyproject.toml          # Project dependencies
+├── settings.json           # Runtime config (auto-generated, gitignored)
+├── routers/
+│   ├── library.py          # Directory scanning
+│   ├── songs.py            # Single song metadata read/write
+│   ├── cover.py            # Cover art search, download, sync
+│   ├── lrc.py              # LRC lyrics read/write, search
+│   ├── batch.py            # Batch operations
+│   └── settings.py         # Settings read/write
+├── services/
+│   ├── scanner.py          # Recursive scan, in-memory index
+│   ├── metadata.py         # mutagen wrapper (unified FLAC/M4A interface)
+│   ├── cover_search.py     # iTunes + Netease cover search
+│   ├── lyrics.py           # LRCLIB + Netease lyrics search
+│   └── settings.py         # settings.json read/write
+└── frontend/
+    └── index.html          # Vue 3 single-file frontend
+```
+
+## Tech Stack
+
+| Component | Choice |
+|-----------|--------|
+| Backend framework | FastAPI |
+| Audio tag read/write | mutagen |
+| Image processing | Pillow |
+| HTTP client | httpx |
+| Netease API | pyncm |
+| Frontend framework | Vue 3 (CDN) |
+| Package manager | uv |
+
+---
+
+## 中文文档
 
 本地音乐库管理工具，通过浏览器界面管理本机硬盘上的音乐文件 metadata。支持 FLAC / AAC (M4A) 格式。
 
@@ -26,10 +140,11 @@
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### 2. 安装依赖
+### 2. 克隆并安装依赖
 
 ```bash
-cd /Users/zhouyi/Music
+git clone https://github.com/JoeyJo233/ez-music-manage.git
+cd ez-music-manage
 uv sync
 ```
 
@@ -45,7 +160,7 @@ uv run uvicorn main:app --reload --port 8765
 
 ## 使用方法
 
-1. **打开文件夹**：在顶栏输入音乐文件夹路径（如 `~/Music/my_music_flac`），点击「打开」
+1. **打开文件夹**：在顶栏输入音乐文件夹路径（如 `~/Music/my_music`），点击「打开」
 2. **选择歌曲**：左栏点击歌曲名称单选，或通过 checkbox 多选
 3. **编辑 Metadata**：右栏直接修改各字段，点击「保存」写入文件
 4. **管理封面**：

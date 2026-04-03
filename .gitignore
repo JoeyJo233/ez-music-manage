@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Runtime config
+settings.json
+
+# OS
+.DS_Store
+
+# Claude Code workspace
+.claude/
+skills/
+skills-lock.json

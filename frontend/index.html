@@ -155,7 +155,13 @@ input, textarea, select, button {
   font-family: inherit;
   font-size: 13px;
 }
-input, textarea {
+input[type="checkbox"], input[type="radio"] {
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+input:not([type="checkbox"]):not([type="radio"]), textarea {
+  appearance: none;
+  -webkit-appearance: none;
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
   border: 1px solid var(--glass-border);
@@ -173,6 +179,8 @@ input::placeholder, textarea::placeholder {
   color: var(--text3);
 }
 select {
+  appearance: none;
+  -webkit-appearance: none;
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
   border: 1px solid var(--glass-border);
@@ -186,6 +194,8 @@ select:hover { border-color: var(--glass-border-hover); }
 
 /* ── Buttons ── */
 button {
+  appearance: none;
+  -webkit-appearance: none;
   cursor: pointer;
   border: none;
   border-radius: 8px;
@@ -2127,8 +2137,12 @@ createApp({
       }
     }
 
-    function loadCardsForSelected() {
-      selectedIds.value.forEach(loadCardIfNeeded)
+    async function loadCardsForSelected() {
+      const ids = selectedIds.value.filter(id => !cards[id])
+      const CONCURRENCY = 5
+      for (let i = 0; i < ids.length; i += CONCURRENCY) {
+        await Promise.all(ids.slice(i, i + CONCURRENCY).map(loadCardIfNeeded))
+      }
     }
 
     function getCard(id) { return cards[id] }

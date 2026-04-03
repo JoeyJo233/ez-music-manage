@@ -6,6 +6,8 @@ from PyInstaller.utils.hooks import collect_submodules
 hiddenimports = []
 hiddenimports += collect_submodules("pyncm")
 hiddenimports += collect_submodules("uvicorn")
+hiddenimports += collect_submodules("webview")
+hiddenimports += ["webview.platforms.cocoa"]
 
 datas = [
     ("frontend", "frontend"),

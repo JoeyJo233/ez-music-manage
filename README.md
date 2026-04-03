@@ -121,10 +121,16 @@ Provides full access to Netease lyrics and cover art search:
 For macOS packaging, use the desktop launcher and the bundled PyInstaller spec:
 
 ```bash
-uvx pyinstaller ez_music_manage.spec
+uv run --with pyinstaller pyinstaller ez_music_manage.spec
 ```
 
 This produces a macOS `.app` in `dist/`, which can be wrapped into a `.dmg` in the next step.
+
+To build the `.dmg` package:
+
+```bash
+bash scripts/build_dmg.sh
+```
 
 ---
 
@@ -247,7 +253,13 @@ uv run python launcher.py
 如果要做 macOS 应用打包，使用桌面启动入口和仓库内的 PyInstaller 配置：
 
 ```bash
-uvx pyinstaller ez_music_manage.spec
+uv run --with pyinstaller pyinstaller ez_music_manage.spec
 ```
 
 这一步会先在 `dist/` 下产出 `.app`，后续再把这个 `.app` 包成 `.dmg`。
+
+生成 `.dmg` 时，执行：
+
+```bash
+bash scripts/build_dmg.sh
+```

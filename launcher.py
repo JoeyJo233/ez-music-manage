@@ -10,6 +10,8 @@ import webbrowser
 
 import uvicorn
 
+from main import app
+
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 
@@ -51,7 +53,7 @@ def main() -> None:
         ).start()
 
     uvicorn.run(
-        "main:app",
+        app,
         host=host,
         port=port,
         reload=False,
